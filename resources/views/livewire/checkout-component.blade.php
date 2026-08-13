@@ -12,7 +12,7 @@
                             <h2 class="text-xl font-semibold mb-4">Adres Bulunamadı!</h2>
                             <p class="text-gray-600 mb-4">Ödeme işlemine devam etmek için lütfen bir teslimat adresi
                                 ekleyin.</p>
-                            <a href="{{ route('filament.admin.resources.addresses.create') }}" class="btn btn-primary">
+                            <a href="{{ route('profile.addresses.create') }}" class="btn btn-primary">
                                 Yeni Adres Ekle
                             </a>
                         </div>

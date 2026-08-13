@@ -32,7 +32,11 @@ class AddPermissionToRolesSeeder extends Seeder
         'cart:update',
         'cart:remove',
         'cart:checkout',
-        'cart:manage'
+        'cart:manage',
+        'profile:view',
+        'profile:update',
+        'order:view',
+        'order:list',
     ];
 
     private array $userPermissions = [
@@ -45,7 +49,11 @@ class AddPermissionToRolesSeeder extends Seeder
         'cart:add',
         'cart:update',
         'cart:remove',
-        'cart:checkout'
+        'cart:checkout',
+        'profile:view',
+        'profile:update',
+        'order:view',
+        'order:list',
     ];
 
     private array $guards = ['api', 'web'];
@@ -68,8 +76,10 @@ class AddPermissionToRolesSeeder extends Seeder
         }
 
         // Assign permissions to roles
-        $adminRole->syncPermissions(Permission::all());
-        $userRole->syncPermissions(Permission::whereIn('name', $this->userPermissions)->get());
+        $adminRole->syncPermissions(Permission::where('guard_name', 'web')->get());
+        $userRole->syncPermissions(Permission::where('guard_name', 'web')
+            ->whereIn('name', $this->userPermissions)
+            ->get());
 
         // Create API guard permissions and roles
         $adminRoleApi = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'api']);

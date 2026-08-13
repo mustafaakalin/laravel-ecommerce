@@ -25,6 +25,10 @@ class PermissionsTableSeeder extends Seeder
         'cart:update',
         'cart:remove',
         'cart:checkout',
+        'profile:view',
+        'profile:update',
+        'order:view',
+        'order:list',
         // Add more permissions as needed
     ];
 

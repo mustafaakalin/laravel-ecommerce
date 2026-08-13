@@ -214,6 +214,9 @@
                                         class="fa-solid fa-gauge"></i>Genel Bakış</a></li>
                             <li><a href="{{ route('filament.admin.resources.orders.index') }}"><i
                                         class="fa-solid fa-shopping-bag"></i>Siparişlerim</a></li>
+                        @else
+                            <li><a href="{{ route('profile.orders') }}"><i
+                                        class="fa-solid fa-shopping-bag"></i>Siparişlerim</a></li>
                         @endif
                         <li><a href="{{ route('profile.show') }}"><i class="fa-solid fa-user"></i>Profilim</a></li>
                         <li><a href="{{ route('wishlist.index') }}"><i class="fa-solid fa-heart"></i>Favorilerim</a></li>

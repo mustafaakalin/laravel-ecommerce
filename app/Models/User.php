@@ -71,6 +71,11 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return $this->hasMany(Address::class);
     }
 
+    public function getFullNameAttribute(): string
+    {
+        return trim($this->name.' '.$this->surname) ?: $this->name;
+    }
+
     public function orders()
     {
         return $this->hasMany(Order::class);

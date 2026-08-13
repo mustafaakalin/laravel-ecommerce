@@ -11,6 +11,7 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProfileAddressController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\WishlistController;
@@ -120,6 +121,27 @@ Route::middleware(['auth'])->group(function () {
     })->name('wishlist.index');
 
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::middleware('can:profile:update')->group(function () {
+        Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+    });
+
+    Route::middleware('can:order:view')->group(function () {
+        Route::get('/profile/orders', [ProfileController::class, 'orders'])->name('profile.orders');
+        Route::get('/profile/orders/{order}', [ProfileController::class, 'orderDetail'])->name('profile.orders.show');
+    });
+
+    Route::middleware('can:address:view')->prefix('profile/addresses')->group(function () {
+        Route::get('/', [ProfileAddressController::class, 'index'])->name('profile.addresses.index');
+        Route::get('/create', [ProfileAddressController::class, 'create'])->name('profile.addresses.create');
+        Route::post('/', [ProfileAddressController::class, 'store'])->name('profile.addresses.store');
+        Route::get('/{address}/edit', [ProfileAddressController::class, 'edit'])->name('profile.addresses.edit');
+        Route::put('/{address}', [ProfileAddressController::class, 'update'])->name('profile.addresses.update');
+        Route::delete('/{address}', [ProfileAddressController::class, 'destroy'])->name('profile.addresses.destroy');
+        Route::put('/{address}/default', [ProfileAddressController::class, 'setDefault'])->name('profile.addresses.default');
+    });
+
     Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
 
