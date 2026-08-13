@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@plugin "@tailwindcss/typography";
+@plugin "tailwind-scrollbar";
+@plugin "daisyui" {
+    themes: light --default, dark --prefersdark, cupcake, bumblebee, emerald, corporate, synthwave, retro, cyberpunk, valentine, halloween, garden, forest, aqua, lofi, pastel, fantasy, wireframe, black, luxury, dracula, cmyk, autumn, business, acid, lemonade, night, coffee, winter, dim, nord, sunset;
+}
+
+@theme {
+    --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
+    --animate-spin-slow: spin 3s linear infinite;
+}
+
+mark {
+    @apply bg-primary text-white px-1 rounded;
+}
+
+@layer components {
+    .btn-float {
+        @apply hover:scale-110 transition-all duration-300 ease-in-out shadow-lg;
+    }
+
+    .badge-bounce {
+        @apply animate-bounce;
+    }
+}
