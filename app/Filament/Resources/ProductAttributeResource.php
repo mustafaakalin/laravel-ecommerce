@@ -36,7 +36,7 @@ class ProductAttributeResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 \Filament\Schemas\Components\Section::make('Öznitelik Detayları')
                     ->description('Ürün özelliklerinin tanımlanması')

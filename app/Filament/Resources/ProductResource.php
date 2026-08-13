@@ -15,6 +15,8 @@ use App\Services\OpenAiService;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Tables\Filters\Filter;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
 use App\Services\HuggingFaceService;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
@@ -63,7 +65,7 @@ class ProductResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 Grid::make(2)->schema([
                     // Ürün Temel Bilgileri
@@ -92,10 +94,10 @@ class ProductResource extends Resource
                                 ->required()
                             ->helperText('Ürün açıklamasından Yapay Zeka ile etiketleri çıkarır ve ekler.')
                                 ->columnSpanFull(),
-                            Forms\Components\Actions::make([
-                                Forms\Components\Actions\Action::make('Etiketleri YZ ile Çıkar')
+                            \Filament\Schemas\Components\Actions::make([
+                                \Filament\Actions\Action::make('Etiketleri YZ ile Çıkar')
                                     ->label('Etiket Çıkar')
-                                    ->action(function (Forms\Get $get, Forms\Set $set) {
+                                    ->action(function (\Filament\Schemas\Components\Utilities\Get $get, \Filament\Schemas\Components\Utilities\Set $set) {
                                         $huggingFaceService = new HuggingFaceService();
                                         try {
                                             // Generate tags using HuggingFaceService

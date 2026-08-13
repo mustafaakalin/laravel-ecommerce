@@ -11,7 +11,7 @@ class StickyButtons extends Component
     {
         return view('livewire.sticky-buttons', [
             'wishlistCount' => Auth::check() ? Auth::user()->wishlist()->count() : 0,
-            'cartCount' => Auth::check() ? Auth::user()->cart()->sum('quantity') : 0
+            'cartCount' => Auth::check() ? Auth::user()->cart?->items()->sum('quantity') ?? 0 : 0
         ]);
     }
 }

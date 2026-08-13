@@ -39,7 +39,7 @@ class BrandResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 Grid::make(2)->schema([
                     Section::make('Marka Detayları')
@@ -51,7 +51,7 @@ class BrandResource extends Resource
                                 ->required()
                                 ->maxLength(255)
                                 ->live(onBlur: true)
-                                ->afterStateUpdated(function (string $operation, $state, Forms\Set $set) {
+                                ->afterStateUpdated(function (string $operation, $state, \Filament\Schemas\Components\Utilities\Set $set) {
                                     if ($operation === 'create') {
                                         $set('slug', Str::slug($state));
                                     }
@@ -95,9 +95,8 @@ class BrandResource extends Resource
                                     'bold',
                                     'italic',
                                     'link',
-                                    'unlink',
                                     'orderedList',
-                                    'unorderedList',
+                                    'bulletList',
                                     'redo',
                                     'undo'
                                 ])

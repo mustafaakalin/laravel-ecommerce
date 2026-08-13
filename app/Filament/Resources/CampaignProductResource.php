@@ -42,7 +42,7 @@ class CampaignProductResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 Forms\Components\Select::make('campaign_id')
                     ->relationship('campaign', 'name') // Campaign modelinde 'name' alanını gösterecek

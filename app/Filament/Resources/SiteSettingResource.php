@@ -28,7 +28,7 @@ class SiteSettingResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 Section::make('Temel Site Bilgileri')
                     ->description('Sitenizin temel bilgilerini buradan yönetebilirsiniz')
@@ -209,7 +209,7 @@ class SiteSettingResource extends Resource
                             ->placeholder('kullaniciadi')
                             ->url()
                             ->suffixAction(
-                                Forms\Components\Actions\Action::make('visit')
+                                \Filament\Actions\Action::make('visit')
                                     ->icon('heroicon-m-arrow-top-right-on-square')
                                     ->url(fn($state) => $state, true)
                                     ->visible(fn($state) => filled($state))
@@ -222,7 +222,7 @@ class SiteSettingResource extends Resource
                             ->placeholder('sayfaadi')
                             ->url()
                             ->suffixAction(
-                                Forms\Components\Actions\Action::make('visit')
+                                \Filament\Actions\Action::make('visit')
                                     ->icon('heroicon-m-arrow-top-right-on-square')
                                     ->url(fn($state) => $state, true)
                                     ->visible(fn($state) => filled($state))
@@ -235,7 +235,7 @@ class SiteSettingResource extends Resource
                             ->placeholder('kanaladi')
                             ->url()
                             ->suffixAction(
-                                Forms\Components\Actions\Action::make('visit')
+                                \Filament\Actions\Action::make('visit')
                                     ->icon('heroicon-m-arrow-top-right-on-square')
                                     ->url(fn($state) => $state, true)
                                     ->visible(fn($state) => filled($state))
@@ -248,7 +248,7 @@ class SiteSettingResource extends Resource
                             ->placeholder('kullaniciadi')
                             ->url()
                             ->suffixAction(
-                                Forms\Components\Actions\Action::make('visit')
+                                \Filament\Actions\Action::make('visit')
                                     ->icon('heroicon-m-arrow-top-right-on-square')
                                     ->url(fn($state) => $state, true)
                                     ->visible(fn($state) => filled($state))
@@ -261,7 +261,7 @@ class SiteSettingResource extends Resource
                             ->placeholder('sirketadi')
                             ->url()
                             ->suffixAction(
-                                Forms\Components\Actions\Action::make('visit')
+                                \Filament\Actions\Action::make('visit')
                                     ->icon('heroicon-m-arrow-top-right-on-square')
                                     ->url(fn($state) => $state, true)
                                     ->visible(fn($state) => filled($state))
@@ -274,7 +274,7 @@ class SiteSettingResource extends Resource
                             ->placeholder('kullaniciadi')
                             ->url()
                             ->suffixAction(
-                                Forms\Components\Actions\Action::make('visit')
+                                \Filament\Actions\Action::make('visit')
                                     ->icon('heroicon-m-arrow-top-right-on-square')
                                     ->url(fn($state) => $state, true)
                                     ->visible(fn($state) => filled($state))

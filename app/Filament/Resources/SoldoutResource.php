@@ -36,7 +36,7 @@ class SoldoutResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 Section::make('Satılan Ürün Detayları')
                     ->description('Satılan ürün bilgilerini yönetin')

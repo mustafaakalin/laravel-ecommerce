@@ -43,7 +43,7 @@ class LikeResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 Section::make('Beğeni Detayları')
                     ->description('Ürün beğeni bilgilerini buradan yönetebilirsiniz.')

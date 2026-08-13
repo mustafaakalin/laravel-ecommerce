@@ -63,7 +63,7 @@ class CommentResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 Select::make('user_id')
                     ->relationship('user', 'name')

@@ -43,7 +43,7 @@ class CartResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 Section::make('Sepet Bilgileri')
                     ->schema([
@@ -112,7 +112,7 @@ class CartResource extends Resource
                             ->defaultItems(0)
                             ->addActionLabel('Ürün Ekle')
                             ->deleteAction(
-                                fn(Forms\Components\Actions\Action $action) =>
+                                fn(\Filament\Actions\Action $action) =>
                                 $action->requiresConfirmation()
                             )
                     ])->collapsible(),

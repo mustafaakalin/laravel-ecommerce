@@ -60,7 +60,7 @@ class OrderResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 Section::make('Sipariş Detayları')
                     ->description('Temel sipariş bilgileri')
@@ -103,7 +103,7 @@ class OrderResource extends Resource
                                             ->preload()
                                             ->required()
                                             ->live()
-                                            ->afterStateUpdated(function ($state, Forms\Set $set) {
+                                            ->afterStateUpdated(function ($state, \Filament\Schemas\Components\Utilities\Set $set) {
                                                 if ($product = \App\Models\Product::find($state)) {
                                                     $set('price', $product->price);
                                                 }
@@ -116,7 +116,7 @@ class OrderResource extends Resource
                                             ->default(1)
                                             ->required()
                                             ->live()
-                                            ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
+                                            ->afterStateUpdated(function ($state, \Filament\Schemas\Components\Utilities\Set $set, \Filament\Schemas\Components\Utilities\Get $get) {
                                                 $price = $get('price');
                                                 if ($price) {
                                                     $set('subtotal', $price * $state);

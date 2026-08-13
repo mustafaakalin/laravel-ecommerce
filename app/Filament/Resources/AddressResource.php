@@ -45,7 +45,7 @@ class AddressResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 Hidden::make('user_id')
                     ->default(fn() => auth()->id())

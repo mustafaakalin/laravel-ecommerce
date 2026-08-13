@@ -195,13 +195,19 @@ class Product extends Model implements HasMedia
             ->first(); // Changed to first()
     }
 
-public function isCampaignProduct()
-{
-    return $this->campaignProduct()
-        ->where('campaign_id', $this->activeCampaign()->id)
-        ->where('product_id', '=', $this->id)
-        ->exists();
-}
+    public function isCampaignProduct()
+    {
+        $activeCampaign = $this->activeCampaign();
+
+        if (! $activeCampaign) {
+            return false;
+        }
+
+        return $this->campaignProduct()
+            ->where('campaign_id', $activeCampaign->id)
+            ->where('product_id', '=', $this->id)
+            ->exists();
+    }
 
 
     public function getCurrentPrice()

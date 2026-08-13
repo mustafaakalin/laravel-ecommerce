@@ -52,7 +52,7 @@ class CartItemResource extends Resource
     }
     public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 \Filament\Schemas\Components\Section::make('Sepet Ürün Detayı')
                     ->description('Sepete eklenecek ürün bilgilerini düzenleyin')

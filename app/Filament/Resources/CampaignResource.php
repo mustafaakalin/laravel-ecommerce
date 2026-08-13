@@ -33,7 +33,7 @@ class CampaignResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 Section::make('Kampanya Bilgileri')
                     ->description('Kampanya detaylarını bu alandan yönetebilirsiniz')
@@ -150,7 +150,6 @@ class CampaignResource extends Resource
                             ->multiple()
                             ->relationship('products', 'name')
                             ->searchable()
-                            ->preload()
                             ->createOptionForm([
                                 Forms\Components\TextInput::make('name')
                                     ->required()

@@ -6,7 +6,6 @@ use App\Models\Product;
 use Livewire\Component;
 use App\Models\CartItem;
 use App\Models\Cart as CartModel;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class AddToCart extends Component
@@ -77,15 +76,19 @@ class AddToCart extends Component
                 'user_id' => auth()->id()
             ]);
     
-            $cartItem = CartItem::updateOrCreate(
-                [
+            $cartItem = CartItem::where('cart_id', $cart->id)
+                ->where('product_id', $this->product->id)
+                ->first();
+
+            if ($cartItem) {
+                $cartItem->increment('quantity', $this->quantity);
+            } else {
+                $cartItem = CartItem::create([
                     'cart_id' => $cart->id,
-                    'product_id' => $this->product->id
-                ],
-                [
-                    'quantity' => DB::raw('quantity + ' . $this->quantity)
-                ]
-            );
+                    'product_id' => $this->product->id,
+                    'quantity' => $this->quantity,
+                ]);
+            }
     
             // Success notifications
             $this->dispatch('cartUpdated');

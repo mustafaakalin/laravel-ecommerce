@@ -49,7 +49,7 @@ class ProductAttributeValueResource extends Resource
     
     public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 Section::make('Özellik Değeri')
                     ->description('Ürün özellik değerini yapılandırın')
@@ -81,7 +81,7 @@ class ProductAttributeValueResource extends Resource
                             ->searchable()
                             ->preload()
                             ->live()
-                            ->afterStateUpdated(fn($state, Forms\Set $set) =>
+                            ->afterStateUpdated(fn($state, \Filament\Schemas\Components\Utilities\Set $set) =>
                             $set('value', null))
                             ->label('Özellik'),
 

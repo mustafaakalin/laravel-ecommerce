@@ -15,7 +15,7 @@ class ShipmentRelationManager extends RelationManager
 
     public function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 Forms\Components\Select::make('carrier')
                     ->required()

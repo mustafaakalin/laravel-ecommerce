@@ -38,7 +38,7 @@ class ShipmentResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 \Filament\Schemas\Components\Section::make('Sipariş Bilgileri')
                     ->schema([
