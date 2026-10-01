@@ -92,7 +92,7 @@ class CheckoutController extends Controller
                 'totalinput' => 'nullable'
             ]);
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 400);
+            return response()->json(['error' => 'Invalid checkout request.'], 400);
         }
 
         // Kullanıcının sepetini al
