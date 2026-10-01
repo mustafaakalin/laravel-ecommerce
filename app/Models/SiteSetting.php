@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Support\CacheKeys;
+use Illuminate\Support\Facades\Cache;
 
 class SiteSetting extends Model
 {
