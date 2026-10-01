@@ -29,7 +29,7 @@ class ImageService
         
         // Check if custom default exists in settings
         $settings = Cache::remember('site_settings', 3600, function () {
-            return \App\Models\SiteSetting::first();
+            return \App\Models\SiteSetting::cached();
         });
 
         $settingKey = "default_{$type}_image";
