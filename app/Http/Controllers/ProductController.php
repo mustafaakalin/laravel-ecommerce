@@ -106,13 +106,27 @@ class ProductController extends Controller
             'sort_by' => $this->buildSort($request->input('sort', 'newest')),
             'per_page' => 12,
             'page' => $request->input('page', 1),
+            'use_cache' => true,
+            'cache_ttl' => 60,
         ];
 
         $result = $client->collections['products']->documents->search($searchParameters);
 
-        $products = collect($result['hits'])->map(function ($hit) {
-            return Product::find($hit['document']['id']);
-        });
+        $ids = collect($result['hits'])
+            ->pluck('document.id')
+            ->map(static fn ($id) => (int) $id)
+            ->values();
+
+        $productsById = Product::query()
+            ->with(['images', 'brand', 'category'])
+            ->whereIn('id', $ids)
+            ->get()
+            ->keyBy('id');
+
+        $products = $ids
+            ->map(static fn (int $id) => $productsById->get($id))
+            ->filter()
+            ->values();
 
         $pagination = view('partials.pagination', ['paginator' => $products])->render();
 
