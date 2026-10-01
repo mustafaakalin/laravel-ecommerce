@@ -61,7 +61,7 @@
                     <!-- Ürün Detayları -->
                     <div class="flex-1 min-w-0">
                         <div class="font-medium text-base-content">
-                            {!! $product['name'] !!}
+                            {{ $product['name'] }}
                         </div>
                         
                         <div class="badge badge-primary mt-1 font-semibold">
@@ -69,13 +69,13 @@
                         </div>
                         
                         <p class="text-xs text-base-content/60 line-clamp-2 mt-2">
-                            {!! $product['description'] !!}
+                            {{ $product['description'] }}
                         </p>
                         
                         @if(isset($product['tags']) && count($product['tags']) > 0)
                         <div class="flex flex-wrap gap-1 mt-2">
                             @foreach($product['tags'] as $tag)
-                            <div class="badge badge-ghost badge-sm">{!! $tag !!}</div>
+                            <div class="badge badge-ghost badge-sm">{{ $tag }}</div>
                             @endforeach
                         </div>
                         @endif
