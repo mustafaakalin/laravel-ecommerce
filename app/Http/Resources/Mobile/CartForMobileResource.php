@@ -59,7 +59,7 @@ class CartForMobileResource extends JsonResource
             // Calculate shipping
             $shippingCost = 0;
             if ($subtotal < ShipmentDiscount::first()->price) {
-                $shippingCost = SiteSetting::first()->site_shipment_price ?? 0;
+                $shippingCost = SiteSetting::cached()->site_shipment_price ?? 0;
             }
 
             $finalTotal = $subtotal + $shippingCost;
