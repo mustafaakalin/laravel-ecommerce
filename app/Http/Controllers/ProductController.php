@@ -84,7 +84,7 @@ class ProductController extends Controller
             });
 
         // Avoid a synchronous SQL UPDATE on every product page request.
-        Redis::incr('product:views:' . $product->id);
+        Redis::hIncrBy('product:view:deltas', (string) $product->id, 1);
 
         return view('products.show', compact('product', 'similarProducts', 'brandsimilarProducts', 'purchaseHistory'));
     }
