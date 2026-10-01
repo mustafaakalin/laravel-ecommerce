@@ -52,7 +52,7 @@ class PopularProductsHomepageComponentForMobileController extends Controller
                 ->with([
                     'category:id,name,slug',
                     'media',
-                    'ratings'
+                    'ratings', 'campaigns'
                 ])
                 ->where('is_active', true)
                 ->where('stock', '>', 0)
