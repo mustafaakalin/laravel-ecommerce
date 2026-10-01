@@ -17,7 +17,7 @@ class CategoryController extends Controller
 
     public function show($slug)
     {
-        $category = Category::with('products', 'parent', 'children','products.images','products.brand','products.campaigns')->where('slug', $slug)->firstOrFail();
+        $category = Category::with('products', 'parent', 'children','products.tags','products.media','products.brand','products.campaigns')->where('slug', $slug)->firstOrFail();
         return new CategoryResource($category);
     }
 }
