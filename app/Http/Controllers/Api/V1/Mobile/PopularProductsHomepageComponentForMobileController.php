@@ -16,7 +16,7 @@ class PopularProductsHomepageComponentForMobileController extends Controller
 
     public function index(): AnonymousResourceCollection
     {
-        $products = Cache::remember('mobile_popular_products', self::CACHE_TTL, function () {
+        $products = Cache::remember(\App\Support\CacheKeys::mobile('popular-products'), self::CACHE_TTL, function () {
             return Product::query()
                 ->select([
                     'products.id',
