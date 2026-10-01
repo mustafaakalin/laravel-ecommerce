@@ -10,11 +10,13 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Soldout;
 use App\Models\Coupon;
+use App\Models\CouponUsage;
 use App\Models\SiteSetting;
 use App\Models\ShipmentDiscount;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\OrderConfirmationMail;
 use Symfony\Component\HttpFoundation\Response;
@@ -291,7 +293,16 @@ class PaymentForMobileController extends Controller
             $payment = Payment::create($createPaymentRequest, $options);
 
             if ($payment->getStatus() === 'success') {
-                // Create order with final calculated price
+                if ($cart->coupon_id) {
+                $coupon = Coupon::lockForUpdate()->find($cart->coupon_id);
+                if ($coupon) {
+                    if (!$coupon->isValid() || CouponUsage::where('coupon_id', $coupon->id)->where('user_id', Auth::id())->exists()) {
+                        throw new \RuntimeException('Coupon is no longer valid.');
+                    }
+                }
+            }
+
+            // Create order with final calculated price
                 $order = $this->createOrder($cart, $finalPrice, 0, $request->input('address_id'), 'iyzico', $payment->getPaymentId());
 
                 return [
@@ -372,7 +383,19 @@ class PaymentForMobileController extends Controller
                 return response()->json(['status' => 'success', 'order_id' => $existing->id]);
             }
 
-            $order = $this->createOrder($cart, $expectedAmount / 100, 0, $address->id, 'stripe', $intent->id);
+            $order = DB::transaction(function () use ($cart, $expectedAmount, $address, $intent) {
+                $order = $this->createOrder($cart, $expectedAmount / 100, 0, $address->id, 'stripe', $intent->id);
+
+                if ($cart->coupon_id) {
+                    $coupon = Coupon::lockForUpdate()->find($cart->coupon_id);
+                    if ($coupon && $coupon->isValid() && !CouponUsage::where('coupon_id', $coupon->id)->where('user_id', Auth::id())->exists()) {
+                        CouponUsage::create(['coupon_id' => $coupon->id, 'user_id' => Auth::id(), 'order_id' => $order->id]);
+                        $coupon->increment('used_count');
+                    }
+                }
+
+                return $order;
+            });
 
             return response()->json([
                 'status' => 'success',
