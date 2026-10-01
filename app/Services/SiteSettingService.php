@@ -10,9 +10,9 @@ final class SiteSettingService
 {
     public function get(): ?SiteSetting
     {
-        return Cache::remember(
+        return Cache::flexible(
             CacheKeys::siteSettings(),
-            3600,
+            [300, 3600],
             static fn () => SiteSetting::query()->first()
         );
     }
