@@ -54,7 +54,7 @@ class CartForMobileController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Could not retrieve cart',
-                'message' => $e->getMessage()
+                'message' => 'Could not apply coupon.'
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
