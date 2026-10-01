@@ -291,9 +291,7 @@ class SoldoutResource extends Resource
 
         // Admin değilse sadece kendi siparişlerine ait kargoları göster
         if (!auth()->user()->hasRole('admin')) {
-            $query->whereHas('user', function ($query) {
-                $query->where('user_id', auth()->id());
-            });
+            $query->where('user_id', auth()->id());
         }
 
         return $query;
