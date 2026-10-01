@@ -21,11 +21,17 @@ class ProductController extends Controller
             ->get();
         $brands = Brand::select('id', 'name', 'slug')
             ->get();
-        $minprice = Product::where('price', '>', 0)->min('price');
-        $maxprice = Product::where('price', '>', 0)->max('price');
-        $products = Product::all();
+        $priceRange = Product::query()
+            ->where('price', '>', 0)
+            ->selectRaw('MIN(price) as minprice, MAX(price) as maxprice')
+            ->first();
 
-        return view('products.index', compact('products', 'categories', 'brands', 'minprice', 'maxprice'));
+        return view('products.index', [
+            'categories' => $categories,
+            'brands' => $brands,
+            'minprice' => $priceRange?->minprice,
+            'maxprice' => $priceRange?->maxprice,
+        ]);
     }
 
     public function show($slug)
