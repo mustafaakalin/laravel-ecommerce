@@ -125,7 +125,7 @@ class AuthController extends Controller
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Logout failed: ' . $e->getMessage()
+                'message' => 'Logout failed'
             ], 500);
         }
     }
@@ -161,7 +161,7 @@ class AuthController extends Controller
 
             return response()->json(['redirect_url' => $redirectUrl]);
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Authentication service unavailable'], 503);
         }
     }
 
