@@ -36,7 +36,7 @@
     <script>
         const typesenseInstantsearchAdapter = new TypesenseInstantSearchAdapter({
             server: {
-                apiKey: '{{ config('scout.typesense.client-settings.api_key') }}',
+                apiKey: '{{ env('TYPESENSE_SEARCH_ONLY_KEY') }}',
                 nodes: [{
                     host: '{{ config('scout.typesense.client-settings.nodes.0.host') }}',
                     port: '{{ config('scout.typesense.client-settings.nodes.0.port') }}',
