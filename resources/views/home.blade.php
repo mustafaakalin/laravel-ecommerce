@@ -61,7 +61,7 @@
                 <!-- Stats -->
                 <div class="grid grid-cols-3 gap-4 pt-8">
                     <div class="text-center">
-                        <div class="text-3xl font-bold text-primary">{{ $products->count() }}+</div>
+                        <div class="text-3xl font-bold text-primary">{{ $productCount }}+</div>
                         <div class="text-sm text-base-content/70">Ürün</div>
                     </div>
                     <div class="text-center">
