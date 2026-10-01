@@ -11,6 +11,11 @@ final class CacheKeys
         return self::VERSION . ':mobile:' . $resource;
     }
 
+    public static function catalog(string $resource): string
+    {
+        return self::VERSION . ':catalog:' . $resource;
+    }
+
     public static function siteSettings(): string
     {
         return self::VERSION . ':site-settings';
