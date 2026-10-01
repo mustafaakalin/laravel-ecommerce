@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
 use Illuminate\Http\Request;
 use Typesense\Client;
 
@@ -10,17 +9,7 @@ class SearchController extends Controller
 {
     public function search(Request $request)
     {
-        $client = new Client([
-            'api_key' => env('TYPESENSE_API_KEY'),
-            'nodes' => [
-                [
-                    'host' => env('TYPESENSE_HOST'),
-                    'port' => env('TYPESENSE_PORT'),
-                    'protocol' => env('TYPESENSE_PROTOCOL'),
-                ],
-            ],
-            'connection_timeout_seconds' => 2,
-        ]);
+        $client = new Client(config('scout.typesense.client-settings'));
 
         $page = max(1, min((int) $request->query('page', 1), 10000));
         $perPage = max(1, min((int) $request->query('per_page', 24), 100));
@@ -32,7 +21,9 @@ class SearchController extends Controller
             'per_page' => $perPage,
             'page' => $page,
             'highlight_fields' => 'name,description',
-            'highlight_full_fields' => 'name,description'
+            'highlight_full_fields' => 'name,description',
+            'use_cache' => true,
+            'cache_ttl' => 60,
         ];
 
         if ($request->filled('filter_by')) {
@@ -45,6 +36,7 @@ class SearchController extends Controller
                     || !in_array($m[1], $allowedFields, true)) {
                     return response()->json(['message' => 'Invalid filter'], 422);
                 }
+
                 $safeFilters[] = $m[1] . ':' . $m[2] . $m[3];
             }
 
@@ -53,29 +45,29 @@ class SearchController extends Controller
             }
         }
 
-        $searchResults = $client->collections['products']
-            ->documents
-            ->search($searchParameters);
+        $searchResults = $client->collections['products']->documents->search($searchParameters);
 
-        $products = collect($searchResults['hits'])->map(function ($hit) {
-            return Product::find($hit['document']['id']);
-        });
+        // Search results are rendered from the search document itself.
+        // This removes one SQL query per hit from the hot path.
+        $products = collect($searchResults['hits'])
+            ->map(static fn (array $hit) => $hit['document']);
 
-        $totalHits = $searchResults['found'];
-        $totalPages = ceil($totalHits / $perPage);
+        $totalHits = (int) $searchResults['found'];
 
         return response()->json([
-            'data' => $products->map(function ($product) {
+            'data' => $products->map(static function (array $product) {
                 return [
-                    'id' => $product->id,
-                    'component' => view('components.product-card', ['product' => $product])->render()
+                    'id' => (int) $product['id'],
+                    'component' => view('components.product-card-search', [
+                        'product' => $product,
+                    ])->render(),
                 ];
             }),
             'pagination' => [
-                'current_page' => (int) $page,
-                'per_page' => (int) $perPage,
-                'total_pages' => $totalPages,
-                'total_results' => (int) $totalHits,
+                'current_page' => $page,
+                'per_page' => $perPage,
+                'total_pages' => (int) ceil($totalHits / $perPage),
+                'total_results' => $totalHits,
             ],
         ]);
     }
