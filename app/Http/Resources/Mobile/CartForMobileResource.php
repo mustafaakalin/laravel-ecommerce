@@ -56,7 +56,7 @@ class CartForMobileResource extends JsonResource
                 $subtotal = max(0, $subtotal - $couponDiscount);
             }
 
-            $freeShippingThreshold = ShipmentDiscount::query()->value('price') ?? 0;
+            $freeShippingThreshold = ShipmentDiscount::cachedPrice();
             $shippingCost = $subtotal < $freeShippingThreshold
                 ? (SiteSetting::cached()?->site_shipment_price ?? 0)
                 : 0;
