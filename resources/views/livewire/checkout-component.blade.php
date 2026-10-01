@@ -247,7 +247,7 @@
                                     fn($item) => $item->getOriginalPrice() * $item->quantity,
                                 );
                                 $shipmentPrice = App\Models\SiteSetting::cached()->site_shipment_price;
-                                $shipmentDiscountprice = App\Models\ShipmentDiscount::query()->value('price') ?? 0;
+                                $shipmentDiscountprice = App\Models\ShipmentDiscount::cachedPrice();
 
                                 if ($originaltotal > $shipmentDiscountprice) {
                                     $shipmentPrice = 0;
