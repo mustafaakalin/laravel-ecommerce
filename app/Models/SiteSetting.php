@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
+use App\Support\CacheKeys;
 
 class SiteSetting extends Model
 {
@@ -38,4 +40,15 @@ class SiteSetting extends Model
         'terms_and_conditions_text',
         'shipping_policy_text',
     ];
+    public static function cached(): ?self
+    {
+        return Cache::remember(CacheKeys::siteSettings(), 3600, static fn () => static::query()->first());
+    }
+
+    protected static function booted(): void
+    {
+        static::saved(static fn () => Cache::forget(CacheKeys::siteSettings()));
+        static::deleted(static fn () => Cache::forget(CacheKeys::siteSettings()));
+    }
 }
+
