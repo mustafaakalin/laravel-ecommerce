@@ -21,7 +21,7 @@ class PagePolicy
      */
     public function view(User $user, Page $page): bool
     {
-        return $page->user_id === $user->id || $user->hasRole('admin');
+        return $user->hasRole('admin');
     }
 
     /**
