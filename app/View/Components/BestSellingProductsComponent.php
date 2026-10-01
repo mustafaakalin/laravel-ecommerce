@@ -7,6 +7,8 @@ use App\Models\Product;
 use Illuminate\View\Component;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Cache;
+use App\Support\CacheKeys;
 
 class BestSellingProductsComponent extends Component
 {
@@ -16,7 +18,7 @@ class BestSellingProductsComponent extends Component
     {
         // One aggregate query + eager-loaded relations, instead of one Product::find()
         // query for every ranked product.
-        $this->products = Product::query()
+        $this->products = Cache::flexible(CacheKeys::rankings('best-selling-products'), [30, 120], static fn () => Product::query()
             ->with(['images', 'brand', 'category'])
             ->join('order_items', 'products.id', '=', 'order_items.product_id')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
@@ -25,7 +27,7 @@ class BestSellingProductsComponent extends Component
             ->groupBy('products.id')
             ->orderByDesc('sales')
             ->limit(10)
-            ->get();
+            ->get());
     }
 
     public function render(): View|Closure|string
