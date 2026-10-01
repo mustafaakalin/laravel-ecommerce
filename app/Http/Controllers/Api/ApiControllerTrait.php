@@ -36,7 +36,7 @@ trait ApiControllerTrait
     protected function getDefaultImage(string $type): string
     {
         $settings = Cache::remember('site_settings', 3600, function () {
-            return \App\Models\SiteSetting::first();
+            return \App\Models\SiteSetting::cached();
         });
 
         $defaultImages = [
