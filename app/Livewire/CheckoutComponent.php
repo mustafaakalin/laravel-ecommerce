@@ -38,7 +38,7 @@ class CheckoutComponent extends Component
     public $cart;
     public $couponCode = '';
     public $couponDiscount = 0;
-    public $couponDiscountType = 'percentage' || 'fixed';
+    public $couponDiscountType = 'percentage';
     public $couponDiscountValue = 0;
     public $discount = 0;
     public $totalPrice;
@@ -155,12 +155,13 @@ class CheckoutComponent extends Component
             }
 
             $coupon = Coupon::where('code', $this->couponCode)->first();
-            $this->couponDiscountValue = $coupon->value;
-            $this->couponDiscountType = $coupon->type;
 
             if (!$coupon) {
                 throw new \Exception('Kupon bulunamadı.');
             }
+
+            $this->couponDiscountValue = $coupon->value;
+            $this->couponDiscountType = $coupon->type;
 
             if (!$coupon->isValid()) {
                 throw new \Exception('Bu kupon artık geçerli değil.');
@@ -582,11 +583,13 @@ class CheckoutComponent extends Component
                 throw new \RuntimeException('Stripe payment verification failed');
             }
 
+            $address = auth()->user()->addresses()->findOrFail($this->selectedAddress);
+
             DB::beginTransaction();
 
             $order = Order::create([
                 'user_id' => auth()->id(),
-                'address_id' => $this->selectedAddress,
+                'address_id' => $address->id,
                 'total_price' => $serverTotal,
                 'status' => 'paid',
                 'payment_id' => $intent->id,
