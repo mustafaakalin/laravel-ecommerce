@@ -149,6 +149,8 @@ class ProductListing extends Component
             'sort_by' => $this->buildTypesenseSort(),
             'per_page' => $this->perPage,
             'page' => $this->page,
+            'use_cache' => true,
+            'cache_ttl' => 60,
         ];
 
         $result = $client->collections['products']->documents->search($searchParameters);
@@ -161,9 +163,21 @@ class ProductListing extends Component
      */
     private function mapSearchResults(array $hits)
     {
-        return collect($hits)->map(function ($hit) {
-            return Product::find($hit['document']['id']);
-        });
+        $ids = collect($hits)
+            ->pluck('document.id')
+            ->map(static fn ($id) => (int) $id)
+            ->values();
+
+        $productsById = Product::query()
+            ->with(['images', 'brand', 'category'])
+            ->whereIn('id', $ids)
+            ->get()
+            ->keyBy('id');
+
+        return $ids
+            ->map(static fn (int $id) => $productsById->get($id))
+            ->filter()
+            ->values();
     }
 
     /**
