@@ -27,7 +27,7 @@ services:
         image: 'postgres:18'
         container_name: ecommerce-pgsql
         ports:
-            - '${FORWARD_DB_PORT:-5432}:5432'
+            - '127.0.0.1:${FORWARD_DB_PORT:-5432}:5432'
         environment:
             POSTGRES_DB: '${DB_DATABASE}'
             POSTGRES_USER: '${DB_USERNAME}'
@@ -45,10 +45,10 @@ services:
         image: 'docker.io/typesense/typesense:30.2'
         container_name: ecommerce-typesense
         ports:
-            - '${FORWARD_TYPESENSE_PORT:-8108}:8108'
+            - '127.0.0.1:${FORWARD_TYPESENSE_PORT:-8108}:8108'
         environment:
             TYPESENSE_DATA_DIR: '${TYPESENSE_DATA_DIR:-/typesense-data}'
-            TYPESENSE_API_KEY: '${TYPESENSE_API_KEY:-xyz}'
+            TYPESENSE_API_KEY: '${TYPESENSE_API_KEY}'
             TYPESENSE_ENABLE_CORS: '${TYPESENSE_ENABLE_CORS:-true}'
         volumes:
             - 'sail-typesense:/typesense-data'
