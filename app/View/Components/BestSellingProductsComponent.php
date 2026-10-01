@@ -3,6 +3,7 @@
 namespace App\View\Components;
 
 use Closure;
+use App\Models\Product;
 use Illuminate\View\Component;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Contracts\View\View;
@@ -13,10 +14,12 @@ class BestSellingProductsComponent extends Component
 
     public function __construct()
     {
-        // Join the product table once instead of Product::find() per ranking row.
-        $this->products = DB::table('order_items')
+        // One aggregate query + eager-loaded relations, instead of one Product::find()
+        // query for every ranked product.
+        $this->products = Product::query()
+            ->with(['images', 'brand', 'category'])
+            ->join('order_items', 'products.id', '=', 'order_items.product_id')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
-            ->join('products', 'products.id', '=', 'order_items.product_id')
             ->where('orders.status', 'delivered')
             ->select('products.*', DB::raw('SUM(order_items.quantity) as sales'))
             ->groupBy('products.id')
