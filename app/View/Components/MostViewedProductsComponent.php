@@ -6,6 +6,8 @@ use Closure;
 use App\Models\Product;
 use Illuminate\View\Component;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Cache;
+use App\Support\CacheKeys;
 use Illuminate\Support\Collection;
 
 class MostViewedProductsComponent extends Component
@@ -17,10 +19,7 @@ class MostViewedProductsComponent extends Component
     public function __construct()
     {
         // Get the 8 most viewed active products
-        $this->products = Product::where('is_active', true)
-            ->orderBy('view_count', 'desc')
-            ->take(8)
-            ->get();
+        $this->products = Cache::flexible(CacheKeys::rankings('most-viewed-products'), [30, 120], static fn () => Product::query()->with(['images', 'brand', 'category'])->where('is_active', true)->orderByDesc('view_count')->take(8)->get());
     }
 
     /**
