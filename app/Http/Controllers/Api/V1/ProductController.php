@@ -14,7 +14,11 @@ class ProductController extends Controller
 
     public function index()
     {
-        $products = Product::with(['category', 'images', 'comments.user', 'brand', 'likes', 'ratings', 'tags', 'campaigns', 'campaigns.products'])->paginate(10);
+        $products = Product::query()
+            ->with(['category', 'comments.user', 'brand', 'tags', 'campaigns', 'campaigns.products', 'media'])
+            ->withCount(['likes', 'ratings'])
+            ->withAvg('ratings', 'rating')
+            ->paginate(10);
         return ProductResource::collection($products);
     }
     
@@ -23,7 +27,12 @@ class ProductController extends Controller
 
     public function show($slug)
     {
-        $product = Product::with('category', 'images', 'comments.user','brand','likes','campaigns')->where('slug', $slug)->firstOrFail();
+        $product = Product::query()
+            ->with(['category', 'comments.user', 'brand', 'tags', 'campaigns', 'media'])
+            ->withCount(['likes', 'ratings'])
+            ->withAvg('ratings', 'rating')
+            ->where('slug', $slug)
+            ->firstOrFail();
         return new ProductResource($product);
     }
 }
