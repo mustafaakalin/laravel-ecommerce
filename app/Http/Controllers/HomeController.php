@@ -14,9 +14,9 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $home = Cache::remember(
+        $home = Cache::flexible(
             CacheKeys::homepage('catalog'),
-            60,
+            [30, 120],
             static function () {
                 return [
                     // The homepage only needs the count, not every active product row.
