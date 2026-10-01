@@ -139,11 +139,7 @@ class CheckoutController extends Controller
         $paymentRequest->setLocale(Locale::TR);
         $paymentRequest->setConversationId(uniqid());
         $paymentRequest->setPrice($totalPrice);
-        if ($request->input('totalinput')) {
-            $paymentRequest->setPaidPrice($request->input('totalinput'));
-        } else {
-            $paymentRequest->setPaidPrice($totalPrice);
-        }
+        $paymentRequest->setPaidPrice($totalPrice);
 
         $paymentRequest->setCurrency('TRY');
         $paymentRequest->setPaymentChannel(PaymentChannel::WEB);
