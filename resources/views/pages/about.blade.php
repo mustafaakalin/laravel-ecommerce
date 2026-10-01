@@ -8,7 +8,7 @@
             <div class="max-w-3xl">
                 <h1 class="text-5xl font-bold mb-8">{{ $settings->site_name }}</h1>
                 <div class="divider"></div>
-                <p class="py-6 text-lg leading-relaxed">{!! $settings->site_description . $settings->site_slogan . Str::markdown($about->content) !!}</p>
+                <p class="py-6 text-lg leading-relaxed">{!! str($settings->site_description . $settings->site_slogan . Str::markdown($about->content))->sanitizeHtml() !!}</p>
             </div>
         </div>
     </div>
