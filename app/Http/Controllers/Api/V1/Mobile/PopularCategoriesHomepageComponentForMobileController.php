@@ -16,7 +16,7 @@ class PopularCategoriesHomepageComponentForMobileController extends Controller
 
     public function index(): AnonymousResourceCollection
     {
-        $categories = Cache::remember('mobile_popular_categories', self::CACHE_TTL, function () {
+        $categories = Cache::remember(\App\Support\CacheKeys::mobile('popular-categories'), self::CACHE_TTL, function () {
             return Category::query()
                 ->select([
                     'categories.id',
