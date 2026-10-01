@@ -123,7 +123,7 @@ class CartForMobileController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Could not add item to cart',
-                'message' => $e->getMessage()
+                'message' => 'Could not add item to cart.'
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -167,7 +167,7 @@ class CartForMobileController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Could not apply coupon',
-                'message' => $e->getMessage()
+                'message' => 'Could not apply coupon.'
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -251,7 +251,7 @@ class CartForMobileController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Could not update cart item',
-                'message' => $e->getMessage()
+                'message' => 'Could not update cart item.'
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -285,7 +285,7 @@ class CartForMobileController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Could not remove item from cart',
-                'message' => $e->getMessage()
+                'message' => 'Could not remove item from cart.'
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
