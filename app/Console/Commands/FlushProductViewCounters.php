@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Str;
+use Throwable;
 
 class FlushProductViewCounters extends Command
 {
@@ -23,19 +24,22 @@ class FlushProductViewCounters extends Command
             return self::SUCCESS;
         }
 
-        $processingKey = 'product:view:deltas:processing:' . Str::uuid();
+        $sourceKey = 'product:view:deltas';
+        $processingKey = $sourceKey . ':processing:' . Str::uuid();
         $redis = Redis::connection();
+        $flushed = false;
 
         try {
-            if (! $redis->exists('product:view:deltas')) {
+            if (! $redis->exists($sourceKey)) {
                 return self::SUCCESS;
             }
 
-            // Atomic rename prevents increments during the flush from being lost.
-            $redis->rename('product:view:deltas', $processingKey);
-            $deltas = $redis->hgetall($processingKey);
+            // Atomically detach the current batch. New views go into a fresh hash.
+            $redis->rename($sourceKey, $processingKey);
 
+            $deltas = $redis->hgetall($processingKey);
             if (! $deltas) {
+                $flushed = true;
                 return self::SUCCESS;
             }
 
@@ -43,7 +47,7 @@ class FlushProductViewCounters extends Command
             $existingIds = Product::query()
                 ->whereIn('id', $ids)
                 ->pluck('id')
-                ->map(static fn ($id) => (int) $id)
+                ->map(static fn ($id): int => (int) $id)
                 ->all();
 
             if ($existingIds) {
@@ -66,9 +70,26 @@ class FlushProductViewCounters extends Command
                 );
             }
 
+            $flushed = true;
+
             return self::SUCCESS;
+        } catch (Throwable $e) {
+            $this->error('Product view counters could not be flushed: ' . $e->getMessage());
+
+            // Never lose a detached batch when the database is unavailable.
+            // Re-add it to the live hash so the next run can retry it.
+            if ($redis->exists($processingKey)) {
+                foreach ($redis->hgetall($processingKey) as $productId => $count) {
+                    $redis->hIncrBy($sourceKey, $productId, (int) $count);
+                }
+            }
+
+            return self::FAILURE;
         } finally {
-            $redis->del($processingKey);
+            if ($flushed) {
+                $redis->del($processingKey);
+            }
+
             $lock->release();
         }
     }
