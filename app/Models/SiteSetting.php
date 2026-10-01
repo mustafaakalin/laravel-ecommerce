@@ -42,7 +42,7 @@ class SiteSetting extends Model
     ];
     public static function cached(): ?self
     {
-        return Cache::remember(CacheKeys::siteSettings(), 3600, static fn () => static::query()->first());
+        return Cache::flexible(CacheKeys::siteSettings(), [300, 3600], static fn () => static::query()->first());
     }
 
     protected static function booted(): void
