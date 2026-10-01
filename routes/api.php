@@ -102,6 +102,7 @@ Route::prefix('v1')->group(function () {
         });
 
     Route::post('payment', [PaymentForMobileController::class, 'processPayment'])->name('api.v1.payment.process')->middleware(['auth:sanctum', 'verified']);
+    Route::post('payment/stripe/confirm', [PaymentForMobileController::class, 'confirmStripePayment'])->name('api.v1.payment.stripe.confirm')->middleware(['auth:sanctum', 'verified']);
 
     Route::apiResource('addresses', AddressForMobileController::class)
         ->names([
