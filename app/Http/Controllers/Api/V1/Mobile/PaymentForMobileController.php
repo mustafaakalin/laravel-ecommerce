@@ -211,8 +211,7 @@ class PaymentForMobileController extends Controller
                         'price_after_coupon' => $finalPrice
                     ]);
 
-                    // Kupon kullanım sayısını artır
-                    $coupon->increment('used_count');
+                    // Usage is recorded only after a successful payment/order transaction.
 
                 } catch (\Exception $e) {
                     Log::error('Coupon application failed:', [
@@ -220,8 +219,7 @@ class PaymentForMobileController extends Controller
                         'coupon_id' => $cart->coupon_id,
                         'error' => $e->getMessage()
                     ]);
-                    // Kupon hatası durumunda işlemi durdurmadan devam et
-                    // Sadece loglama yap ve kullanıcıya bildir
+                    throw $e;
                 }
             }
 
@@ -241,7 +239,7 @@ class PaymentForMobileController extends Controller
             $createPaymentRequest = new CreatePaymentRequest();
             $createPaymentRequest->setLocale('tr');
             $createPaymentRequest->setConversationId(uniqid());
-            $createPaymentRequest->setPrice($cart->items->sum(fn($item) => $item->getOriginalPrice() * $item->quantity));
+            $createPaymentRequest->setPrice(round($finalPrice, 2));
             $createPaymentRequest->setPaidPrice(round($finalPrice, 2));
             $createPaymentRequest->setBasketItems($basketItems);
 
