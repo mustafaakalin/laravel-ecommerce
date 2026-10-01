@@ -22,7 +22,10 @@ class CartCounter extends Component
     public function updateCart()
     {
         if (auth()->check()) {
-            $cart = CartModel::where('user_id', auth()->id())->first();
+            $cart = CartModel::query()
+                ->with(['items.product.campaigns', 'coupon'])
+                ->where('user_id', auth()->id())
+                ->first();
             if ($cart) {
                 $this->cartCount = $cart->getTotalItems();
                 $this->cartTotal = $cart->calculateTotalPrice();

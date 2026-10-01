@@ -4,23 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Typesense\Client;
 
 class SearchController extends Controller
 {
     public function search(Request $request)
     {
-        $client = new Client([
-            'api_key' => env('TYPESENSE_API_KEY'),
-            'nodes' => [
-                [
-                    'host' => env('TYPESENSE_HOST'),
-                    'port' => env('TYPESENSE_PORT'),
-                    'protocol' => env('TYPESENSE_PROTOCOL'),
-                ],
-            ],
-            'connection_timeout_seconds' => 2,
-        ]);
+        $client = new Client(config('scout.typesense.client-settings'));
 
         $page = max(1, min((int) $request->query('page', 1), 10000));
         $perPage = max(1, min((int) $request->query('per_page', 24), 100));
@@ -32,50 +23,64 @@ class SearchController extends Controller
             'per_page' => $perPage,
             'page' => $page,
             'highlight_fields' => 'name,description',
-            'highlight_full_fields' => 'name,description'
+            'highlight_full_fields' => 'name,description',
+            'use_cache' => true,
+            'cache_ttl' => 60,
         ];
 
         if ($request->filled('filter_by')) {
             $allowedFields = ['brand_id', 'category_id', 'stock', 'price', 'is_new', 'is_featured'];
-            $parts = preg_split('/\s+&&\s+/', $request->query('filter_by'));
             $safeFilters = [];
 
-            foreach ($parts as $part) {
-                if (!preg_match('/^([a-z_]+):(=|>=|<=|>|<)([A-Za-z0-9_.-]+)$/', trim($part), $m)
-                    || !in_array($m[1], $allowedFields, true)) {
+            foreach (preg_split('/\s+&&\s+/', $request->query('filter_by')) as $part) {
+                if (! preg_match('/^([a-z_]+):(=|>=|<=|>|<)([A-Za-z0-9_.-]+)$/', trim($part), $matches)
+                    || ! in_array($matches[1], $allowedFields, true)) {
                     return response()->json(['message' => 'Invalid filter'], 422);
                 }
-                $safeFilters[] = $m[1] . ':' . $m[2] . $m[3];
+
+                $safeFilters[] = $matches[1] . ':' . $matches[2] . $matches[3];
             }
 
-            if ($safeFilters) {
-                $searchParameters['filter_by'] = implode(' && ', $safeFilters);
-            }
+            $searchParameters['filter_by'] = implode(' && ', $safeFilters);
         }
 
-        $searchResults = $client->collections['products']
-            ->documents
-            ->search($searchParameters);
+        $searchResults = $client->collections['products']->documents->search($searchParameters);
 
-        $products = collect($searchResults['hits'])->map(function ($hit) {
-            return Product::find($hit['document']['id']);
-        });
+        $ids = collect($searchResults['hits'])
+            ->pluck('document.id')
+            ->map(static fn ($id): int => (int) $id)
+            ->values();
 
-        $totalHits = $searchResults['found'];
-        $totalPages = ceil($totalHits / $perPage);
+        $productsById = Product::query()
+            ->with(['images', 'brand', 'category'])
+            ->whereIn('id', $ids)
+            ->get()
+            ->keyBy('id');
+
+        $products = $ids
+            ->map(static fn (int $id) => $productsById->get($id))
+            ->filter()
+            ->values();
+
+        $totalHits = (int) ($searchResults['found'] ?? 0);
+        $paginator = new LengthAwarePaginator(
+            $products,
+            $totalHits,
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
 
         return response()->json([
-            'data' => $products->map(function ($product) {
-                return [
-                    'id' => $product->id,
-                    'component' => view('components.product-card', ['product' => $product])->render()
-                ];
-            }),
+            'data' => $products->map(static fn (Product $product) => [
+                'id' => $product->id,
+                'component' => view('components.product-card', compact('product'))->render(),
+            ])->values(),
             'pagination' => [
-                'current_page' => (int) $page,
-                'per_page' => (int) $perPage,
-                'total_pages' => $totalPages,
-                'total_results' => (int) $totalHits,
+                'current_page' => $page,
+                'per_page' => $perPage,
+                'total_pages' => $paginator->lastPage(),
+                'total_results' => $totalHits,
             ],
         ]);
     }

@@ -6,6 +6,8 @@ use Closure;
 use App\Models\Product;
 use Illuminate\View\Component;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Cache;
+use App\Support\CacheKeys;
 
 class MostCommentedProductsComponent extends Component
 {
@@ -15,10 +17,7 @@ class MostCommentedProductsComponent extends Component
      */
     public function __construct()
     {
-        $this->products = Product::withCount('comments')
-            ->orderBy('comments_count', 'desc')
-            ->take(10)
-            ->get();
+        $this->products = Cache::flexible(CacheKeys::rankings('most-commented-products'), [30, 120], static fn () => Product::query()->with(['images', 'brand', 'category'])->withCount('comments')->orderByDesc('comments_count')->take(10)->get());
     }
 
     /**

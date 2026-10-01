@@ -16,7 +16,7 @@ class MostSoldCategoriesComponentForMobileController extends Controller
 
     public function index(): AnonymousResourceCollection
     {
-        $categories = Cache::remember('mobile_most_sold_categories', self::CACHE_TTL, function () {
+        $categories = Cache::remember(\App\Support\CacheKeys::mobile('most-sold-categories'), self::CACHE_TTL, function () {
             return Category::select([
                     'categories.id',
                     'categories.name',

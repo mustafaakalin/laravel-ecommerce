@@ -21,7 +21,7 @@ class ContactLivewire extends Component
 
     public function mount()
     {
-        $this->settings = SiteSetting::first();
+        $this->settings = SiteSetting::cached();
     }
 
     protected function rules()

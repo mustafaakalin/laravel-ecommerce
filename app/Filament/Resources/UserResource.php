@@ -469,7 +469,8 @@ class UserResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
+        $query = parent::getEloquentQuery()
+            ->with('roles');
 
         // Admin değilse sadece kendi kaydını göster
         if (!auth()->user()->hasRole('admin')) {

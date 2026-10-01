@@ -15,7 +15,7 @@ class TestimonialsHomepageComponentForMobileController extends Controller
 
     public function index(): AnonymousResourceCollection
     {
-        $testimonials = Cache::remember('mobile_homepage_testimonials', self::CACHE_TTL, function () {
+        $testimonials = Cache::remember(\App\Support\CacheKeys::mobile('homepage-testimonials'), self::CACHE_TTL, function () {
             return Testimonial::query()
                 ->select([
                     'id',

@@ -39,14 +39,14 @@ class ProductResource extends JsonResource
             // 'rating' => $this->rating,
             'rating' => [
                 'average' => $avgRating,
-                'count' => $this->ratings->count(),
+                'count' => $this->ratings_count ?? ($this->relationLoaded('ratings') ? $this->ratings->count() : 0),
             ],
             'campaign' => CampaignResource::collection($this->whenLoaded('campaigns')),
             'category' => new CategoryResource($this->whenLoaded('category')),
             'brand' => new BrandResource($this->whenLoaded('brand')),
-            'likes' => $this->likes->count(),
+            'likes' => $this->likes_count ?? ($this->relationLoaded('likes') ? $this->likes->count() : 0),
             // 'images' => ProductImageResource::collection($this->whenLoaded('images')),
-            'images' => $this->getMedia('images')->map(function ($media) {
+            'images' => ($this->relationLoaded('media') ? $this->media->where('collection_name', 'images') : $this->getMedia('images'))->map(function ($media) {
                 return [
                     'id' => $media->id,
                     'url' => $media->getUrl(),

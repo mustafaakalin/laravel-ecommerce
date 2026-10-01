@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\Response;
 
 trait ApiControllerTrait
@@ -35,9 +34,7 @@ trait ApiControllerTrait
 
     protected function getDefaultImage(string $type): string
     {
-        $settings = Cache::remember('site_settings', 3600, function () {
-            return \App\Models\SiteSetting::first();
-        });
+        $settings = \App\Models\SiteSetting::cached();
 
         $defaultImages = [
             'brand' => $settings->default_brand_image ?? 'assets/images/defaults/brand.png',

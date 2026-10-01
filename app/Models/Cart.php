@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -80,8 +81,8 @@ class Cart extends Model
                     });
 
                     // Kargo ücreti kontrolü
-                    $shipmentPrice = SiteSetting::first()->site_shipment_price ?? 0;
-                    $shipmentDiscountPrice = ShipmentDiscount::first()->price ?? 0;
+                    $shipmentPrice = SiteSetting::cached()?->site_shipment_price ?? 0;
+                    $shipmentDiscountPrice = ShipmentDiscount::cachedPrice();
 
                     // Kupon indirimi
                     if ($this->coupon_id && $this->coupon && $this->coupon->isValid()) {

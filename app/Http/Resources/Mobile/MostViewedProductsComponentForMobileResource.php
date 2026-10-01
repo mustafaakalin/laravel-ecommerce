@@ -25,7 +25,7 @@ class MostViewedProductsComponentForMobileResource extends JsonResource
             'view_count' => $this->view_count,
             'rating' => [
                 'average' => $avgRating,
-                'count' => $this->ratings->count(),
+                'count' => $this->ratings_count ?? 0,
             ],
             'in_stock' => $this->isInStock(),
             'thumbnail' => $this->getFirstMediaUrl('thumbnail'),

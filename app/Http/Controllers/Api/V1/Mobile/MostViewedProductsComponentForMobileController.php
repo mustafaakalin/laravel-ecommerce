@@ -15,7 +15,7 @@ class MostViewedProductsComponentForMobileController extends Controller
 
     public function index(): AnonymousResourceCollection
     {
-        $products = Cache::remember('mobile_most_viewed_products', self::CACHE_TTL, function () {
+        $products = Cache::remember(\App\Support\CacheKeys::mobile('most-viewed-products'), self::CACHE_TTL, function () {
             return Product::query()
                 ->select([
                     'id', 
@@ -27,7 +27,9 @@ class MostViewedProductsComponentForMobileController extends Controller
                     'view_count',
                     'is_active'
                 ])
-                ->with(['category:id,name,slug', 'media', 'ratings'])
+                ->with(['category:id,name,slug', 'media'])
+                ->withCount('ratings')
+                ->withAvg('ratings', 'rating')
                 ->where('is_active', true)
                 ->where('stock', '>', 0)
                 ->orderBy('view_count', 'desc')

@@ -15,8 +15,8 @@
                 </ul>
             </div>
             <a href="{{ route('home') }}" class="btn btn-ghost text-xl normal-case">
-                <span class="hidden md:inline">{{ \App\Models\SiteSetting::first()->site_name }}</span>
-                <span class="md:hidden">{{ Str::limit(\App\Models\SiteSetting::first()->site_name, 10) }}</span>
+                <span class="hidden md:inline">{{ \App\Models\SiteSetting::cached()->site_name }}</span>
+                <span class="md:hidden">{{ Str::limit(\App\Models\SiteSetting::cached()->site_name, 10) }}</span>
             </a>
         </div>
 

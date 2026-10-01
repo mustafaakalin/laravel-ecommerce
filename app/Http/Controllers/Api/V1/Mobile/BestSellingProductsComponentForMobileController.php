@@ -16,7 +16,7 @@ class BestSellingProductsComponentForMobileController extends Controller
 
     public function index(): AnonymousResourceCollection
     {
-        $products = Cache::remember('mobile_best_selling_products', self::CACHE_TTL, function () {
+        $products = Cache::remember(\App\Support\CacheKeys::mobile('best-selling-products'), self::CACHE_TTL, function () {
             $bestSellers = DB::table('order_items')
                 ->select([
                     'order_items.product_id',
@@ -34,7 +34,9 @@ class BestSellingProductsComponentForMobileController extends Controller
 
             return Product::query()
                 ->whereIn('id', $productIds)
-                ->with(['category:id,name,slug', 'media', 'ratings'])
+                ->with(['category:id,name,slug', 'media', 'campaigns'])
+                ->withCount('ratings')
+                ->withAvg('ratings', 'rating')
                 ->where('is_active', true)
                 ->get()
                 ->map(function ($product) use ($salesMap) {

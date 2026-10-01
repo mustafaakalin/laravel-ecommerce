@@ -47,11 +47,6 @@
 
 
             <!-- Loading State -->
-            @if ($isLoading)
-                <div class="flex justify-center items-center py-8">
-                    <span class="loading loading-spinner loading-lg"></span>
-                </div>
-            @else
                 <!-- Main Content -->
                 <div class="flex flex-col lg:flex-row gap-6">
                     <!-- Filters -->
@@ -72,7 +67,7 @@
                                             <div class="form-control">
                                                 <label class="cursor-pointer label">
                                                     <input type="checkbox"
-                                                        wire:model.live.debounce.500ms="tempFilters.categories"
+                                                        wire:model.live.debounce.500ms="filters.categories"
                                                         value="{{ $category->id }}" class="checkbox checkbox-primary" />
                                                     <span class="label-text ml-2">{{ $category->name }}</span>
                                                 </label>
@@ -89,7 +84,7 @@
                                             <div class="form-control">
                                                 <label class="cursor-pointer label">
                                                     <input type="checkbox"
-                                                        wire:model.live.debounce.500ms="tempFilters.brands"
+                                                        wire:model.live.debounce.500ms="filters.brands"
                                                         value="{{ $brand->id }}" class="checkbox checkbox-primary" />
                                                     <span class="label-text ml-2">{{ $brand->name }}</span>
                                                 </label>
@@ -103,10 +98,10 @@
                                     <h2 class="text-lg font-semibold mb-2">Fiyat Aralığı</h2>
                                     <div class="flex space-x-2">
                                         <!-- Fiyat inputları için debounce eklenmesi -->
-                                        <input type="number" wire:model.live.debounce.500ms="tempFilters.price_min"
+                                        <input type="number" wire:model.live.debounce.500ms="filters.price_min"
                                             placeholder="Min" class="input input-bordered w-full" />
                                         <!-- Fiyat inputları için debounce eklenmesi -->
-                                        <input type="number" wire:model.live.debounce.500ms="tempFilters.price_max"
+                                        <input type="number" wire:model.live.debounce.500ms="filters.price_max"
                                             placeholder="Max" class="input input-bordered w-full" />
                                     </div>
                                 </div>
@@ -116,12 +111,12 @@
                                     <h2 class="text-lg font-semibold mb-2">Hızlı Filtreler</h2>
                                     <div class="form-control">
                                         <label class="cursor-pointer label">
-                                            <input type="checkbox" wire:model.live.debounce.500ms="tempFilters.only_active"
+                                            <input type="checkbox" wire:model.live.debounce.500ms="filters.only_active"
                                                 class="checkbox checkbox-primary" />
                                             <span class="label-text ml-2">Aktif Ürünler</span>
                                         </label>
                                         <label class="cursor-pointer label">
-                                            <input type="checkbox" wire:model.live.debounce.500ms="tempFilters.only_in_stock"
+                                            <input type="checkbox" wire:model.live.debounce.500ms="filters.only_in_stock"
                                                 class="checkbox checkbox-primary" />
                                             <span class="label-text ml-2">Stokta Olan Ürünler</span>
                                         </label>
@@ -155,7 +150,7 @@
                                     @foreach ($categories as $category)
                                         <div class="form-control">
                                             <label class="cursor-pointer label">
-                                                <input type="checkbox" wire:model.live.debounce.500ms="tempFilters.categories"
+                                                <input type="checkbox" wire:model.live.debounce.500ms="filters.categories"
                                                     value="{{ $category->id }}" class="checkbox checkbox-primary" />
                                                 <span class="label-text ml-2">{{ $category->name }}</span>
                                             </label>
@@ -171,7 +166,7 @@
                                     @foreach ($brands as $brand)
                                         <div class="form-control">
                                             <label class="cursor-pointer label">
-                                                <input type="checkbox" wire:model.live.debounce.500ms="tempFilters.brands"
+                                                <input type="checkbox" wire:model.live.debounce.500ms="filters.brands"
                                                     value="{{ $brand->id }}" class="checkbox checkbox-primary" />
                                                 <span class="label-text ml-2">{{ $brand->name }}</span>
                                             </label>
@@ -184,9 +179,9 @@
                             <div class="mb-4">
                                 <h2 class="text-lg font-semibold mb-2">Fiyat Aralığı</h2>
                                 <div class="flex space-x-2">
-                                    <input type="number" wire:model.live.debounce.500ms="tempFilters.price_min" placeholder="Min"
+                                    <input type="number" wire:model.live.debounce.500ms="filters.price_min" placeholder="Min"
                                         class="input input-bordered w-full" />
-                                    <input type="number" wire:model.live.debounce.500ms="tempFilters.price_max" placeholder="Max"
+                                    <input type="number" wire:model.live.debounce.500ms="filters.price_max" placeholder="Max"
                                         class="input input-bordered w-full" />
                                 </div>
                             </div>
@@ -196,12 +191,12 @@
                                 <h2 class="text-lg font-semibold mb-2">Hızlı Filtreler</h2>
                                 <div class="form-control">
                                     <label class="cursor-pointer label">
-                                        <input type="checkbox" wire:model.live.debounce.500ms="tempFilters.only_active"
+                                        <input type="checkbox" wire:model.live.debounce.500ms="filters.only_active"
                                             class="checkbox checkbox-primary" />
                                         <span class="label-text ml-2">Aktif Ürünler</span>
                                     </label>
                                     <label class="cursor-pointer label">
-                                        <input type="checkbox" wire:model.live.debounce.500ms="tempFilters.only_in_stock"
+                                        <input type="checkbox" wire:model.live.debounce.500ms="filters.only_in_stock"
                                             class="checkbox checkbox-primary" />
                                         <span class="label-text ml-2">Stokta Olan Ürünler</span>
                                     </label>
@@ -245,10 +240,6 @@
                         </div> --}}
                     </div>
                 </div>
-            @endif
-
-
-
         </div>
     </div>
 
@@ -266,18 +257,5 @@
             })
         </script>
     @endscript
-    @script
-        <script>
-            document.addEventListener('livewire:initialized', () => {
-                // filters-updated eventi dinleniyor
-                Livewire.on('filters-updated', () => {
-                    // Alpine.js state'ini kontrol et
-                    const filterMenu = document.querySelector('[x-data]')?.__x;
-                    if (filterMenu) {
-                        filterMenu.getScope().open = false;
-                    }
-                });
-            });
-        </script>
-    @endscript
+
 </div>

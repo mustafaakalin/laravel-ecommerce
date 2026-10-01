@@ -223,8 +223,8 @@ class PaymentForMobileController extends Controller
             }
 
             // 5. Apply shipping cost
-            $shipmentDiscountPrice = ShipmentDiscount::first()->price ?? 0;
-            $shipmentPrice = SiteSetting::first()->site_shipment_price ?? 0;
+            $shipmentDiscountPrice = ShipmentDiscount::cachedPrice();
+            $shipmentPrice = SiteSetting::cached()->site_shipment_price ?? 0;
 
             if ($finalPrice < $shipmentDiscountPrice) {
                 $finalPrice += $shipmentPrice;

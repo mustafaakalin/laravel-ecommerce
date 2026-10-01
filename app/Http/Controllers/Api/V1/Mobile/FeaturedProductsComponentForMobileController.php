@@ -15,7 +15,7 @@ class FeaturedProductsComponentForMobileController extends Controller
 
     public function index(): AnonymousResourceCollection
     {
-        $products = Cache::remember('mobile_featured_products', self::CACHE_TTL, function () {
+        $products = Cache::remember(\App\Support\CacheKeys::mobile('featured-products'), self::CACHE_TTL, function () {
             return Product::query()
                 ->select([
                     'id',
@@ -33,8 +33,10 @@ class FeaturedProductsComponentForMobileController extends Controller
                 ->with([
                     'category:id,name,slug',
                     'media',
-                    'ratings'
+                    'campaigns'
                 ])
+                ->withCount('ratings')
+                ->withAvg('ratings', 'rating')
                 ->where('is_active', true)
                 ->where('is_featured', true)
                 ->where('stock', '>', 0)

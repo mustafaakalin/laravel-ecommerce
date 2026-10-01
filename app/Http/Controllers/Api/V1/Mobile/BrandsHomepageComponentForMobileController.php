@@ -15,7 +15,7 @@ class BrandsHomepageComponentForMobileController extends Controller
 
     public function index(): AnonymousResourceCollection
     {
-        $brands = Cache::remember('mobile_homepage_brands', self::CACHE_TTL, function () {
+        $brands = Cache::remember(\App\Support\CacheKeys::mobile('homepage-brands'), self::CACHE_TTL, function () {
             return Brand::query()
                 ->select([
                     'id',

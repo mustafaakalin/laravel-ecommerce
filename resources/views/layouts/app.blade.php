@@ -24,7 +24,7 @@
             position: fixed;
             inset: 0;
             z-index: 0;
-            background-image: url('{{ asset(\App\Models\SiteSetting::first()->site_logo) }}');
+            background-image: url('{{ asset(\App\Models\SiteSetting::cached()->site_logo) }}');
             background-position: center;
             background-repeat: no-repeat;
             background-size: contain;
@@ -44,8 +44,8 @@
 <body class="min-h-screen bg-base-100">
     <!-- Preloader -->
     @include('partials._preloader', [
-        'siteLogo' => '/' . \App\Models\SiteSetting::first()->site_logo,
-        'siteName' => \App\Models\SiteSetting::first()->site_name
+        'siteLogo' => '/' . \App\Models\SiteSetting::cached()->site_logo,
+        'siteName' => \App\Models\SiteSetting::cached()->site_name
     ])
 
     <!-- Background with Blurred Logo -->

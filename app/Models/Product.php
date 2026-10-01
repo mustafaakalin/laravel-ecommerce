@@ -155,44 +155,26 @@ class Product extends Model implements HasMedia
         $this->increment('view_count');
     }
 
-    // public function activeCampaign()
-    // {
-    //     return $this->campaigns()
-    //         ->where('is_active', true)
-    //         ->where('start_date', '<=', now())
-    //         ->where('end_date', '>=', now())
-    //         ->orderBy('discount_value', 'desc')  // Get the best discount if multiple campaigns exist
-    //         ->first();
-    // }
-
-    // public function activeCampaign2()
-    // {
-    //     return $this->belongsToMany(Campaign::class)
-    //         ->where('is_active', true)
-    //         ->where('start_date', '<=', now())
-    //         ->where('end_date', '>=', now())
-    //         ->orderBy('created_at', 'desc')
-    //         ->limit(1);
-    // }
-
-
-    // public function activeCampaign()
-    // {
-    //     return $this->belongsToMany(Campaign::class)
-    //         ->where('is_active', true)
-    //         ->where('start_date', '<=', now())
-    //         ->where('end_date', '>=', now())
-    //         ->orderBy('created_at', 'desc')
-    //         ->limit(1);
-    // }
     public function activeCampaign()
     {
+        if ($this->relationLoaded('campaigns')) {
+            $now = now();
+
+            return $this->campaigns
+                ->where('is_active', true)
+                ->filter(fn (Campaign $campaign) =>
+                    $campaign->start_date <= $now && $campaign->end_date >= $now
+                )
+                ->sortByDesc('created_at')
+                ->first();
+        }
+
         return $this->belongsToMany(Campaign::class)
             ->where('is_active', true)
             ->where('start_date', '<=', now())
             ->where('end_date', '>=', now())
-            ->orderBy('created_at', 'desc')
-            ->first(); // Changed to first()
+            ->latest('created_at')
+            ->first();
     }
 
     public function isCampaignProduct()
@@ -212,16 +194,6 @@ class Product extends Model implements HasMedia
 
     public function getCurrentPrice()
     {
-        // $campaign = $this->activeCampaign();
-
-        // if ($campaign) {
-        //     if ($campaign->discount_type === 'percentage') {
-        //         return $this->price * (1 - ($campaign->discount_value / 100));
-        //     } elseif ($campaign->discount_type === 'fixed') {
-        //         return max(0, $this->price - $campaign->discount_value);
-        //     }
-        // }
-
         return $this->discount ?
             $this->price - ($this->price * $this->discount / 100) :
             $this->price;
@@ -328,16 +300,37 @@ class Product extends Model implements HasMedia
     // for mobile api resource
     public function getFirstMediaUrl($collection = 'default', $conversion = '')
     {
-        if ($this->images->isNotEmpty()) {
-            return $this->images->first()->getFullUrl($collection, $conversion);
+        if ($this->relationLoaded('media')) {
+            $media = $this->media
+                ->where('collection_name', $collection)
+                ->first();
+
+            return $media?->getFullUrl($collection, $conversion)
+                ?? asset('images/default_product_image.jpg');
         }
 
-        return asset('images/default_product_image.jpg');
+        if ($this->relationLoaded('images')) {
+            $image = $this->images->first();
+
+            return $image?->getFullUrl($collection, $conversion)
+                ?? asset('images/default_product_image.jpg');
+        }
+
+        return $this->getFirstMedia($collection)?->getFullUrl($collection, $conversion)
+            ?? asset('images/default_product_image.jpg');
     }
 
-    public function averageRating()
+    public function averageRating(): float
     {
-        return round($this->ratings()->avg('rating') ?? 0, 1);
+        if (array_key_exists('ratings_avg_rating', $this->attributes)) {
+            return round((float) ($this->attributes['ratings_avg_rating'] ?? 0), 1);
+        }
+
+        $average = $this->relationLoaded('ratings')
+            ? $this->ratings->avg('rating')
+            : $this->ratings()->avg('rating');
+
+        return round($average ?? 0, 1);
     }
 
     public function registerMediaCollections(): void

@@ -81,7 +81,7 @@ Route::prefix('brands')->group(function () {
 // pages
 Route::get('/about', function () {
     $about = App\Models\Page::findOrFail(1);
-    $settings = App\Models\SiteSetting::first();
+    $settings = App\Models\SiteSetting::cached();
     return view('pages.about', compact(['about','settings']));
 })->name('about');
 Route::get('/faq', function () {

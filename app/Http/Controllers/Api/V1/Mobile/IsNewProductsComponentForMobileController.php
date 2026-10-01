@@ -15,7 +15,7 @@ class IsNewProductsComponentForMobileController extends Controller
 
     public function index(): AnonymousResourceCollection
     {
-        $products = Cache::remember('mobile_new_products', self::CACHE_TTL, function () {
+        $products = Cache::remember(\App\Support\CacheKeys::mobile('new-products'), self::CACHE_TTL, function () {
             return Product::query()
                 ->select([
                     'id',
@@ -33,8 +33,10 @@ class IsNewProductsComponentForMobileController extends Controller
                 ->with([
                     'category:id,name,slug',
                     'media',
-                    'ratings'
+                    'campaigns'
                 ])
+                ->withCount('ratings')
+                ->withAvg('ratings', 'rating')
                 ->where('is_active', true)
                 ->where('is_new', true)
                 ->where('stock', '>', 0)

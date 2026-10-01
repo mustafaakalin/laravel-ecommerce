@@ -51,15 +51,21 @@ class ProductResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    private static ?int $navigationCount = null;
+
+    protected static function navigationCount(): int
+    {
+        return static::$navigationCount ??= static::getModel()::count();
+    }
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::count();
+        return (string) static::navigationCount();
     }
 
     public static function getNavigationBadgeColor(): ?string
     {
-        return static::getModel()::count() > 100 ? 'success' : 'info';
+        return static::navigationCount() > 100 ? 'success' : 'info';
     }
 
 

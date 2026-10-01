@@ -15,7 +15,7 @@ class CategoriesHomepageComponentForMobileController extends Controller
 
     public function index(): AnonymousResourceCollection
     {
-        $categories = Cache::remember('mobile_homepage_categories', self::CACHE_TTL, function () {
+        $categories = Cache::remember(\App\Support\CacheKeys::mobile('homepage-categories'), self::CACHE_TTL, function () {
             return Category::query()
                 ->select([
                     'id',

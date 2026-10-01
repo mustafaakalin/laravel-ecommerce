@@ -5,22 +5,22 @@
 
 <!-- Primary Meta Tags -->
 <meta name="title" content="@yield('metatitle', config('app.name'))">
-<meta name="description" content="@yield('metadescription', \App\Models\SiteSetting::first()->site_description ?? '')">
-<meta name="keywords" content="@yield('metakeywords', \App\Models\SiteSetting::first()->site_keywords ?? '')">
+<meta name="description" content="@yield('metadescription', \App\Models\SiteSetting::cached()->site_description ?? '')">
+<meta name="keywords" content="@yield('metakeywords', \App\Models\SiteSetting::cached()->site_keywords ?? '')">
 
 <!-- Open Graph / Facebook -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="{{ url()->current() }}">
 <meta property="og:title" content="@yield('metatitle', config('app.name'))">
-<meta property="og:description" content="@yield('metadescription', \App\Models\SiteSetting::first()->site_description ?? '')">
-<meta property="og:image" content="@yield('metaimage', \App\Models\SiteSetting::first()->site_logo ?? '')">
+<meta property="og:description" content="@yield('metadescription', \App\Models\SiteSetting::cached()->site_description ?? '')">
+<meta property="og:image" content="@yield('metaimage', \App\Models\SiteSetting::cached()->site_logo ?? '')">
 
 <!-- Twitter -->
 <meta property="twitter:card" content="summary_large_image">
 <meta property="twitter:url" content="{{ url()->current() }}">
 <meta property="twitter:title" content="@yield('metatitle', config('app.name'))">
-<meta property="twitter:description" content="@yield('metadescription', \App\Models\SiteSetting::first()->site_description ?? '')">
-<meta property="twitter:image" content="@yield('metaimage', \App\Models\SiteSetting::first()->site_logo ?? '')">
+<meta property="twitter:description" content="@yield('metadescription', \App\Models\SiteSetting::cached()->site_description ?? '')">
+<meta property="twitter:image" content="@yield('metaimage', \App\Models\SiteSetting::cached()->site_logo ?? '')">
 
 <!-- Additional Meta Tags -->
 <meta name="author" content="{{ config('app.name') }}">
@@ -35,4 +35,4 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
 <!-- Favicon -->
-<link rel="icon" type="image/png" href="{{ \App\Models\SiteSetting::first()->favicon ?? asset('favicon.ico') }}">
+<link rel="icon" type="image/png" href="{{ \App\Models\SiteSetting::cached()->favicon ?? asset('favicon.ico') }}">

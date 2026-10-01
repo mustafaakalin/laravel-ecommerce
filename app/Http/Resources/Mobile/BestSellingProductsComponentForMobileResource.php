@@ -28,7 +28,7 @@ class BestSellingProductsComponentForMobileResource extends JsonResource
             'in_stock' => $this->isInStock(),
             'rating' => [
                 'average' => $avgRating,
-                'count' => $this->ratings->count(),
+                'count' => $this->ratings_count ?? 0,
             ],
             'thumbnail' => $this->getFirstMediaUrl('thumbnail'),
             'category' => [

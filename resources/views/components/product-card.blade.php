@@ -27,7 +27,7 @@
     <!-- Image Section -->
     <figure class="relative w-full aspect-square overflow-hidden">
         @if ($product->images->count() > 1)
-            <div class="swiper product-card-swiper-{{ $product->id }} !absolute inset-0">
+            <div class="swiper product-card-swiper !absolute inset-0" data-swiper-product="{{ $product->id }}">
                 <div class="swiper-wrapper h-full">
                     @foreach ($product->images as $index => $image)
                         <div class="swiper-slide h-full">
@@ -65,137 +65,9 @@
                 </div>
             </div>
 
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    new Swiper('.product-card-swiper-{{ $product->id }}', {
-                        // Varsayılan ayarlar (mobile first)
-                        effect: 'cards',
-                        direction: 'horizontal',
-                        grabCursor: true,
-                        centeredSlides: true,
-                        slidesPerView: 1,
-                        mousewheel: false,
 
-                        // Pagination
-                        pagination: {
-                            el: ".swiper-pagination",
-                            clickable: true,
-                            dynamicBullets: true,
-                        },
 
-                        // Otomatik oynatma
-                        autoplay: {
-                            delay: 3000,
-                            disableOnInteraction: false,
-                            pauseOnMouseEnter: true
-                        },
 
-                        // Geçiş hızı
-                        speed: 800,
-
-                        // Responsive breakpoints
-                        breakpoints: {
-                            // >= 640px (sm)
-                            640: {
-                                effect: 'creative',
-                                creativeEffect: {
-                                    prev: {
-                                        translate: [0, 0, -400],
-                                    },
-                                    next: {
-                                        translate: ['100%', 0, 0],
-                                    },
-                                },
-                                direction: 'horizontal',
-                            },
-                            // >= 768px (md)
-                            768: {
-                                effect: 'flip',
-                                flipEffect: {
-                                    slideShadows: true,
-                                    limitRotation: true
-                                },
-                                direction: 'horizontal',
-                                mousewheel: true,
-                            },
-                            // >= 1024px (lg)
-                            1024: {
-                                effect: 'cube',
-                                direction: 'vertical',
-                                mousewheel: true,
-                                cubeEffect: {
-                                    shadow: true,
-                                    slideShadows: true,
-                                    shadowOffset: 20,
-                                    shadowScale: 0.94,
-                                },
-                                zoom: true,
-                            },
-                            // >= 1280px (xl)
-                            1280: {
-                                effect: 'cube',
-                                direction: 'vertical',
-                                mousewheel: true,
-                                zoom: {
-                                    maxRatio: 1.5,
-                                    minRatio: 1
-                                },
-                                cubeEffect: {
-                                    shadow: true,
-                                    slideShadows: true,
-                                    shadowOffset: 20,
-                                    shadowScale: 0.94,
-                                }
-                            }
-                        },
-
-                        // Lazy loading
-                        lazy: {
-                            loadPrevNext: true,
-                            loadOnTransitionStart: true
-                        },
-
-                        // A11y
-                        a11y: {
-                            enabled: true,
-                            prevSlideMessage: 'Önceki görsel',
-                            nextSlideMessage: 'Sonraki görsel',
-                            firstSlideMessage: 'İlk görsel',
-                            lastSlideMessage: 'Son görsel',
-                        }
-                    });
-                });
-            </script>
-
-            {{-- <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    new Swiper('.product-card-swiper-{{ $product->id }}', {
-                        effect: 'cube',
-                        zoom: true,
-                        direction: 'vertical',
-                        grabCursor: true,
-                        centeredSlides: true,
-                        slidesPerView: 'auto',
-                        mousewheel: true,
-                        pagination: {
-                            el: ".swiper-pagination",
-                            clickable: true,
-                        },
-                        autoplay: {
-                            delay: 3000,
-                            disableOnInteraction: false,
-                            pauseOnMouseEnter: true
-                        },
-                        cubeEffect: {
-                            shadow: true,
-                            slideShadows: true,
-                            shadowOffset: 20,
-                            shadowScale: 0.94,
-                        },
-                        speed: 1000,
-                    });
-                });
-            </script> --}}
         @elseif ($product->images->count() === 1)
             <img src="{{ $product->images->first() ? asset('storage/' . $product->images->first()->image_path) : asset('default_product_image.jpg') }}"
                 alt="{{ $product->name }}"
@@ -266,15 +138,10 @@
         <div
             class="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transform translate-x-full group-hover:translate-x-0 transition-all duration-300 z-10">
             @livewire(
-                'toggle-wishlist',
-                [
-                    'product' => $product,
-                    'buttonClasses' => 'btn btn-circle btn-sm bg-base-100/90 hover:bg-base-100 shadow-lg hover:shadow-xl backdrop-blur-sm',
-                ],
-                key('wishlist-' . $product->id)
+                'product-card-actions',
+                ['productId' => $product->id, 'mode' => 'quick'],
+                key('product-card-quick-' . $product->id)
             )
-
-            <livewire:quick-view-button :product-id="$product->id" :button-classes="'btn btn-circle btn-sm bg-base-100/90 hover:bg-base-100 shadow-lg hover:shadow-xl backdrop-blur-sm'" />
         </div>
     </figure>
 
@@ -381,12 +248,9 @@
                 <div
                     class="w-full sm:w-auto md:w-auto lg:w-auto xl:w-auto transform transition-transform duration-300 ease-out group-hover:translate-y-0 translate-y-2">
                     @livewire(
-                        'add-to-cart',
-                        [
-                            'product' => $product,
-                            'buttonClasses' => 'btn btn-primary w-full sm:w-auto md:w-auto lg:w-auto xl:w-auto bg-gradient-to-r from-primary to-primary-focus hover:shadow-lg hover:shadow-primary/30 transition-all duration-500 ease-in-out',
-                        ],
-                        key('add-to-cart-' . $product->id)
+                        'product-card-actions',
+                        ['productId' => $product->id, 'mode' => 'cart'],
+                        key('product-card-cart-' . $product->id)
                     )
                 </div>
             </div>

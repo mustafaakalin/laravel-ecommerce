@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\V1\Mobile;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Http\Resources\Mobile\PopularProductsHomepageComponentForMobileResource;
 use App\Models\Product;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -12,11 +11,45 @@ use Illuminate\Support\Facades\DB;
 
 class PopularProductsHomepageComponentForMobileController extends Controller
 {
-    private const CACHE_TTL = 3600; // 1 hour cache
+    private const CACHE_TTL = 3600;
 
     public function index(): AnonymousResourceCollection
     {
-        $products = Cache::remember('mobile_popular_products', self::CACHE_TTL, function () {
+        $products = Cache::remember(\App\Support\CacheKeys::mobile('popular-products'), self::CACHE_TTL, function () {
+            $cartCounts = DB::table('cart_items')
+                ->select('product_id', DB::raw('COUNT(*) as cart_items_count'))
+                ->groupBy('product_id');
+
+            $salesCounts = DB::table('order_items')
+                ->join('orders', 'order_items.order_id', '=', 'orders.id')
+                ->where('orders.status', 'delivered')
+                ->select('order_items.product_id', DB::raw('COUNT(*) as order_items_count'))
+                ->groupBy('order_items.product_id');
+
+            $commentCounts = DB::table('comments')
+                ->select('product_id', DB::raw('COUNT(*) as comments_count'))
+                ->groupBy('product_id');
+
+            $likeCounts = DB::table('likes')
+                ->select('product_id', DB::raw('COUNT(*) as likes_count'))
+                ->groupBy('product_id');
+
+            $ratingStats = DB::table('product_ratings')
+                ->select(
+                    'product_id',
+                    DB::raw('COUNT(*) as ratings_count'),
+                    DB::raw('AVG(rating) as ratings_avg_rating')
+                )
+                ->groupBy('product_id');
+
+            $score = '(
+                COALESCE(cart_metrics.cart_items_count, 0) * 0.15 +
+                COALESCE(sales_metrics.order_items_count, 0) * 0.35 +
+                COALESCE(comment_metrics.comments_count, 0) * 0.15 +
+                COALESCE(like_metrics.likes_count, 0) * 0.15 +
+                COALESCE(rating_metrics.ratings_avg_rating, 0) * 0.20
+            )';
+
             return Product::query()
                 ->select([
                     'products.id',
@@ -26,41 +59,46 @@ class PopularProductsHomepageComponentForMobileController extends Controller
                     'products.stock',
                     'products.category_id',
                     'products.discount',
-                    'products.is_active'
+                    'products.is_active',
                 ])
-                ->selectRaw('(SELECT COUNT(*) FROM cart_items WHERE products.id = cart_items.product_id) as cart_items_count')
-                ->selectRaw('(SELECT COUNT(*) FROM product_ratings WHERE products.id = product_ratings.product_id) as ratings_count')
-                ->selectRaw('(SELECT COUNT(*) FROM comments WHERE products.id = comments.product_id) as comments_count')
-                ->selectRaw('(SELECT COUNT(*) FROM likes WHERE products.id = likes.product_id) as likes_count')
-                ->selectRaw('(SELECT COUNT(*) FROM order_items 
-                    INNER JOIN orders ON order_items.order_id = orders.id 
-                    WHERE products.id = order_items.product_id 
-                    AND orders.status = "delivered") as order_items_count')
-                ->selectRaw('ROUND(
-                    (
-                        COALESCE((SELECT COUNT(*) FROM cart_items WHERE products.id = cart_items.product_id), 0) * 0.15 + 
-                        COALESCE((SELECT COUNT(*) FROM order_items 
-                            INNER JOIN orders ON order_items.order_id = orders.id 
-                            WHERE products.id = order_items.product_id 
-                            AND orders.status = "delivered"), 0) * 0.35 + 
-                        COALESCE((SELECT COUNT(*) FROM comments WHERE products.id = comments.product_id), 0) * 0.15 + 
-                        COALESCE((SELECT COUNT(*) FROM likes WHERE products.id = likes.product_id), 0) * 0.15 + 
-                        COALESCE((SELECT AVG(rating) FROM product_ratings WHERE product_ratings.product_id = products.id), 0) * 0.20
-                    ), 1
-                ) as popularity_score')
-                ->selectRaw('ROW_NUMBER() OVER (ORDER BY popularity_score DESC) as rank')
+                ->selectRaw('COALESCE(cart_metrics.cart_items_count, 0) as cart_items_count')
+                ->selectRaw('COALESCE(sales_metrics.order_items_count, 0) as order_items_count')
+                ->selectRaw('COALESCE(comment_metrics.comments_count, 0) as comments_count')
+                ->selectRaw('COALESCE(like_metrics.likes_count, 0) as likes_count')
+                ->selectRaw('COALESCE(rating_metrics.ratings_count, 0) as ratings_count')
+                ->selectRaw('COALESCE(rating_metrics.ratings_avg_rating, 0) as ratings_avg_rating')
+                ->selectRaw("ROUND({$score}, 1) as popularity_score")
+                ->leftJoinSub($cartCounts, 'cart_metrics', function ($join) {
+                    $join->on('products.id', '=', 'cart_metrics.product_id');
+                })
+                ->leftJoinSub($salesCounts, 'sales_metrics', function ($join) {
+                    $join->on('products.id', '=', 'sales_metrics.product_id');
+                })
+                ->leftJoinSub($commentCounts, 'comment_metrics', function ($join) {
+                    $join->on('products.id', '=', 'comment_metrics.product_id');
+                })
+                ->leftJoinSub($likeCounts, 'like_metrics', function ($join) {
+                    $join->on('products.id', '=', 'like_metrics.product_id');
+                })
+                ->leftJoinSub($ratingStats, 'rating_metrics', function ($join) {
+                    $join->on('products.id', '=', 'rating_metrics.product_id');
+                })
                 ->with([
                     'category:id,name,slug',
                     'media',
-                    'ratings'
+                    'campaigns',
                 ])
-                ->where('is_active', true)
-                ->where('stock', '>', 0)
-                ->orderByDesc('popularity_score')
+                ->where('products.is_active', true)
+                ->where('products.stock', '>', 0)
+                ->orderByRaw("{$score} DESC")
+                ->orderBy('products.id')
                 ->limit(10)
-                ->get();
+                ->get()
+                ->each(function ($product, $index) {
+                    $product->rank = $index + 1;
+                });
         });
-    
+
         return PopularProductsHomepageComponentForMobileResource::collection($products);
     }
 }

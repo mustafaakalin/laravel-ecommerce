@@ -56,11 +56,10 @@ class CartForMobileResource extends JsonResource
                 $subtotal = max(0, $subtotal - $couponDiscount);
             }
 
-            // Calculate shipping
-            $shippingCost = 0;
-            if ($subtotal < ShipmentDiscount::first()->price) {
-                $shippingCost = SiteSetting::first()->site_shipment_price ?? 0;
-            }
+            $freeShippingThreshold = ShipmentDiscount::cachedPrice();
+            $shippingCost = $subtotal < $freeShippingThreshold
+                ? (SiteSetting::cached()?->site_shipment_price ?? 0)
+                : 0;
 
             $finalTotal = $subtotal + $shippingCost;
 
@@ -79,12 +78,12 @@ class CartForMobileResource extends JsonResource
                     ] : null,
                     'shipping' => [
                         'cost' => round($shippingCost, 2),
-                        'free_shipping_threshold' => ShipmentDiscount::first()->price,
-                        'remaining_for_free' => max(0, ShipmentDiscount::first()->price - $subtotal),
+                        'free_shipping_threshold' => $freeShippingThreshold,
+                        'remaining_for_free' => max(0, $freeShippingThreshold - $subtotal),
                     ],
                     'final_total' => round($finalTotal, 2),
                     'total_savings' => round($totalSavings + $couponDiscount + 
-                        ($subtotal >= ShipmentDiscount::first()->price ? $shippingCost : 0), 2)
+                        ($subtotal >= $freeShippingThreshold ? $shippingCost : 0), 2)
                 ]
             ];
         } catch (\Exception $e) {

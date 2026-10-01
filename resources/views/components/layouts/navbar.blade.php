@@ -40,10 +40,10 @@
                         </li>
                     </ul>
                 </div>
-                <div class="tooltip tooltip-bottom" data-tip="{{ \App\Models\SiteSetting::first()->site_name }}">
+                <div class="tooltip tooltip-bottom" data-tip="{{ \App\Models\SiteSetting::cached()->site_name }}">
                     <a href="{{ route('home') }}" class="btn btn-ghost normal-case px-2 sm:px-4">
-                        <img src="/{{ \App\Models\SiteSetting::first()->site_logo }}" alt="Logo" class="w-auto h-24">
-                        <span class="hidden sm:inline text-xl truncate">{{ \App\Models\SiteSetting::first()->site_name }}</span>
+                        <img src="/{{ \App\Models\SiteSetting::cached()->site_logo }}" alt="Logo" class="w-auto h-24">
+                        <span class="hidden sm:inline text-xl truncate">{{ \App\Models\SiteSetting::cached()->site_name }}</span>
                     </a>
                 </div>
             </div>

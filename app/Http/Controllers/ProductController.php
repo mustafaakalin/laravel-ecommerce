@@ -7,6 +7,10 @@ use App\Models\Category;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductRating;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Http\Request;
 use Typesense\Client;
 
@@ -18,11 +22,17 @@ class ProductController extends Controller
             ->get();
         $brands = Brand::select('id', 'name', 'slug')
             ->get();
-        $minprice = Product::where('price', '>', 0)->min('price');
-        $maxprice = Product::where('price', '>', 0)->max('price');
-        $products = Product::all();
+        $priceRange = Product::query()
+            ->where('price', '>', 0)
+            ->selectRaw('MIN(price) as minprice, MAX(price) as maxprice')
+            ->first();
 
-        return view('products.index', compact('products', 'categories', 'brands', 'minprice', 'maxprice'));
+        return view('products.index', [
+            'categories' => $categories,
+            'brands' => $brands,
+            'minprice' => $priceRange?->minprice,
+            'maxprice' => $priceRange?->maxprice,
+        ]);
     }
 
     public function show($slug)
@@ -47,17 +57,41 @@ class ProductController extends Controller
             ->take(10)
             ->get();
 
-        $purchaseHistory = OrderItem::with('order.user')
-            ->where('product_id', $product->id)
+        // Aggregate purchases at SQL level. The previous implementation loaded
+        // every OrderItem and then every related Order/User into PHP memory.
+        $purchaseHistory = User::query()
+            ->select([
+                'users.id',
+                'users.name',
+                'users.avatar',
+                'users.instagram_account',
+                'users.facebook_account',
+                'users.tiktok_account',
+                'users.x_account',
+                DB::raw('SUM(order_items.quantity) as quantity'),
+            ])
+            ->join('orders', 'orders.user_id', '=', 'users.id')
+            ->join('order_items', 'order_items.order_id', '=', 'orders.id')
+            ->where('order_items.product_id', $product->id)
+            ->groupBy(
+                'users.id',
+                'users.name',
+                'users.avatar',
+                'users.instagram_account',
+                'users.facebook_account',
+                'users.tiktok_account',
+                'users.x_account'
+            )
             ->get()
-            ->map(function ($item) {
+            ->map(static function ($user) {
                 return (object) [
-                    'user' => $item->order->user,
-                    'quantity' => $item->quantity,
+                    'user' => $user,
+                    'quantity' => (int) $user->quantity,
                 ];
             });
 
-        $product->incrementViewCount();
+        // Avoid a synchronous SQL UPDATE on every product page request.
+        Redis::hIncrBy('product:view:deltas', (string) $product->id, 1);
 
         return view('products.show', compact('product', 'similarProducts', 'brandsimilarProducts', 'purchaseHistory'));
     }
@@ -73,19 +107,40 @@ class ProductController extends Controller
             'sort_by' => $this->buildSort($request->input('sort', 'newest')),
             'per_page' => 12,
             'page' => $request->input('page', 1),
+            'use_cache' => true,
+            'cache_ttl' => 60,
         ];
 
         $result = $client->collections['products']->documents->search($searchParameters);
 
-        $products = collect($result['hits'])->map(function ($hit) {
-            return Product::find($hit['document']['id']);
-        });
+        $ids = collect($result['hits'])
+            ->pluck('document.id')
+            ->map(static fn ($id) => (int) $id)
+            ->values();
 
-        $pagination = view('partials.pagination', ['paginator' => $products])->render();
+        $productsById = Product::query()
+            ->with(['images', 'brand', 'category'])
+            ->whereIn('id', $ids)
+            ->get()
+            ->keyBy('id');
+
+        $products = $ids
+            ->map(static fn (int $id) => $productsById->get($id))
+            ->filter()
+            ->values();
+
+        $totalHits = (int) ($result['found'] ?? 0);
+        $paginator = new LengthAwarePaginator(
+            $products,
+            $totalHits,
+            12,
+            (int) $request->input('page', 1),
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
 
         return response()->json([
             'products' => view('partials.product-list', ['products' => $products])->render(),
-            'pagination' => $pagination,
+            'pagination' => view('partials.pagination', ['paginator' => $paginator])->render(),
         ]);
     }
 
