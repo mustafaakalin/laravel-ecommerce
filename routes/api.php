@@ -101,7 +101,7 @@ Route::prefix('v1')->group(function () {
             });
         });
 
-    Route::post('payment', [PaymentForMobileController::class, 'processPayment'])->name('api.v1.payment.process');
+    Route::post('payment', [PaymentForMobileController::class, 'processPayment'])->name('api.v1.payment.process')->middleware(['auth:sanctum', 'verified']);
 
     Route::apiResource('addresses', AddressForMobileController::class)
         ->names([
@@ -111,7 +111,7 @@ Route::prefix('v1')->group(function () {
             'update' => 'api.v1.mobile.addresses.update',
             'destroy' => 'api.v1.mobile.addresses.destroy',
         ])
-        ->middleware(['can:address:view', 'can:address:create', 'can:address:update', 'can:address:delete']);
+        ->middleware(['auth:sanctum', 'verified']);
 
     Route::get('products', [ProductController::class, 'index'])->name('api.v1.products.index');
     Route::get('products/{slug}', [ProductController::class, 'show'])->name('api.v1.products.show');
@@ -130,15 +130,15 @@ Route::prefix('v1')->group(function () {
         Route::get('profile', [AuthController::class, 'user'])->name('api.v1.profile');
     });
     // Route::apiResource('addresses', AddressController::class)->names(['index' => 'api.v1.addresses.index', 'store' => 'api.v1.addresses.store', 'show' => 'api.v1.addresses.show', 'update' => 'api.v1.addresses.update', 'destroy' => 'api.v1.addresses.destroy',]);
-    Route::prefix('products/{productId}')->group(function () {
+    Route::prefix('products/{productId}')->middleware(['auth:sanctum', 'verified'])->group(function () {
         Route::apiResource('comments', CommentController::class)->names(['index' => 'api.v1.comments.index', 'store' => 'api.v1.comments.store', 'update' => 'api.v1.comments.update', 'destroy' => 'api.v1.comments.destroy',]);
         Route::get('comments/user-info', [CommentController::class, 'userCommentsInfo'])->name('api.v1.comments.user-info');
     });
-    Route::post('/checkout', [CheckoutController::class, 'store'])->name('api.v1.checkout.store');
-    Route::get('wishlist', [LikeController::class, 'index']);
-    Route::post('wishlist/{productId}', [LikeController::class, 'store']);
-    Route::delete('wishlist/{productId}', [LikeController::class, 'destroy']);
-    Route::get('wishlist/check/{productId}', [LikeController::class, 'check']);
+    Route::post('/checkout', [CheckoutController::class, 'store'])->name('api.v1.checkout.store')->middleware(['auth:sanctum', 'verified']);
+    Route::get('wishlist', [LikeController::class, 'index'])->middleware(['auth:sanctum', 'verified']);
+    Route::post('wishlist/{productId}', [LikeController::class, 'store'])->middleware(['auth:sanctum', 'verified']);
+    Route::delete('wishlist/{productId}', [LikeController::class, 'destroy'])->middleware(['auth:sanctum', 'verified']);
+    Route::get('wishlist/check/{productId}', [LikeController::class, 'check'])->middleware(['auth:sanctum', 'verified']);
     // Route::get('cart', [CartController::class, 'index']);
     // Route::post('cart', [CartController::class, 'store']);
     // Route::put('cart/{productId}', [CartController::class, 'update']);
