@@ -12,7 +12,7 @@
 
 
 @php
-$siteSetting = App\Models\SiteSetting::first();
+$siteSetting = App\Models\SiteSetting::cached();
 @endphp
     <div class="absolute -top-20 left-1/2 transform -translate-x-1/2 w-full max-w-4xl px-8 pb-16 mb-16 mx-auto">
         <!-- Newsletter Section -->
@@ -241,51 +241,51 @@ $siteSetting = App\Models\SiteSetting::first();
                 <ul class="space-y-4">
                     <li class="flex items-start gap-3">
                         <i class="fa-solid fa-location-dot mt-1 text-primary"></i>
-                        <span>{{ App\Models\SiteSetting::first()->site_address }}</span>
+                        <span>{{ App\Models\SiteSetting::cached()->site_address }}</span>
                     </li>
                     <li class="flex items-center gap-3">
                         <i class="fa-solid fa-phone text-primary"></i>
-                        <a href="tel:{{ App\Models\SiteSetting::first()->site_phone }}"
+                        <a href="tel:{{ App\Models\SiteSetting::cached()->site_phone }}"
                             class="hover:text-primary transition-colors">
-                            +90 {{ App\Models\SiteSetting::first()->site_phone }}
+                            +90 {{ App\Models\SiteSetting::cached()->site_phone }}
                         </a>
                     </li>
                     <li class="flex items-center gap-3">
                         <i class="fa-solid fa-envelope text-primary"></i>
-                        <a href="mailto:{{ App\Models\SiteSetting::first()->site_mail }}"
+                        <a href="mailto:{{ App\Models\SiteSetting::cached()->site_mail }}"
                             class="hover:text-primary transition-colors">
-                            {{ App\Models\SiteSetting::first()->site_mail }}
+                            {{ App\Models\SiteSetting::cached()->site_mail }}
                         </a>
                     </li>
                 </ul>
 
                 {{-- Social Media --}}
                 <div class="flex gap-4 mt-6">
-                    <a target="blank" href="https://facebook.com/{{ App\Models\SiteSetting::first()->social_facebook }}"
+                    <a target="blank" href="https://facebook.com/{{ App\Models\SiteSetting::cached()->social_facebook }}"
                         class="btn btn-circle btn-sm btn-ghost hover:text-primary">
                         <i class="fa-brands fa-facebook-f"></i>
                     </a>
-                    <a target="blank" href="https://x.com/{{ App\Models\SiteSetting::first()->social_x }}"
+                    <a target="blank" href="https://x.com/{{ App\Models\SiteSetting::cached()->social_x }}"
                         class="btn btn-circle btn-sm btn-ghost hover:text-primary">
                         <i class="fa-brands fa-twitter"></i>
                     </a>
                     <a target="blank"
-                        href="https://instagram.com/{{ App\Models\SiteSetting::first()->social_instagram }}"
+                        href="https://instagram.com/{{ App\Models\SiteSetting::cached()->social_instagram }}"
                         class="btn btn-circle btn-sm btn-ghost hover:text-primary">
                         <i class="fa-brands fa-instagram"></i>
                     </a>
                     <a target="blank"
-                        href="https://linkedin.com/in/{{ App\Models\SiteSetting::first()->social_linkedin }}"
+                        href="https://linkedin.com/in/{{ App\Models\SiteSetting::cached()->social_linkedin }}"
                         class="btn btn-circle btn-sm btn-ghost hover:text-primary">
                         <i class="fa-brands fa-linkedin-in"></i>
                     </a>
                     <a target="blank"
-                        href="https://youtube.com/{{ '@' . App\Models\SiteSetting::first()->social_youtube }}"
+                        href="https://youtube.com/{{ '@' . App\Models\SiteSetting::cached()->social_youtube }}"
                         class="btn btn-circle btn-sm btn-ghost hover:text-primary">
                         <i class="fa-brands fa-youtube"></i>
                     </a>
                     <a target="blank"
-                        href="https://tiktok.com/{{ '@' . App\Models\SiteSetting::first()->social_tiktok }}"
+                        href="https://tiktok.com/{{ '@' . App\Models\SiteSetting::cached()->social_tiktok }}"
                         class="btn btn-circle btn-sm btn-ghost hover:text-primary">
                         <i class="fa-brands fa-tiktok"></i>
                     </a>
@@ -298,11 +298,11 @@ $siteSetting = App\Models\SiteSetting::first();
             <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-bolt text-2xl text-primary"></i>
-                    <span class="text-xl font-bold">{{ App\Models\SiteSetting::first()->site_name }}</span>
+                    <span class="text-xl font-bold">{{ App\Models\SiteSetting::cached()->site_name }}</span>
                 </div>
 
                 <div class="text-sm text-base-content/60">
-                    © {{ date('Y') }} {{ App\Models\SiteSetting::first()->site_name }}. Tüm hakları saklıdır.
+                    © {{ date('Y') }} {{ App\Models\SiteSetting::cached()->site_name }}. Tüm hakları saklıdır.
                     ❤️‍🔥🤩🌟
                 </div>
 
