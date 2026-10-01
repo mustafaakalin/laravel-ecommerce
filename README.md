@@ -138,7 +138,7 @@ SCOUT_DRIVER=typesense
 TYPESENSE_HOST=typesense # 127.0.0.1 when running without Docker
 TYPESENSE_PORT=8108
 TYPESENSE_PROTOCOL=http
-TYPESENSE_API_KEY=xyz
+TYPESENSE_API_KEY=CHANGE_ME_USE_A_RANDOM_SECRET
 ```
 
 The following integrations are optional and can be left as placeholders:
