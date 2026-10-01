@@ -24,7 +24,7 @@ class UsersTableSeeder extends Seeder
                 'surname' => $faker->lastName,
                 'email' => $faker->unique()->safeEmail,
                 'email_verified_at' => now(),
-                'password' => Hash::make('password'), // Default password
+                'password' => Hash::make(Str::random(32)), // Unique random seed password
                 'identity_number' => $faker->unique()->numerify('###########'),
                 'avatar' => "", // Placeholder avatar
                 'instagram_account' => $faker->userName,
