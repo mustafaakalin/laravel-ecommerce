@@ -15,7 +15,7 @@ class CouponController extends Controller
                 'coupon_code' => 'required|string|max:100',
             ]);
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 400);
+            return response()->json(['error' => 'Invalid coupon request.'], 400);
         }
 
         // Kupon kodunu al
