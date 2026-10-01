@@ -76,9 +76,6 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->firstOrFail();
 
-        // Clear previous tokens
-        $user->tokens()->delete();
-
         $token = $user->createToken(
             'mobile_auth_token',
             ['*'],
@@ -101,11 +98,13 @@ class AuthController extends Controller
         try {
             $user = $request->user();
 
-            // Delete old tokens
-            $user->tokens()->delete();
+            $currentToken = $user->currentAccessToken();
+            if (!$currentToken) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+            $currentToken->delete();
 
-            // Create new token
-            $token = $user->createToken('auth_token')->plainTextToken;
+            $token = $user->createToken('auth_token', ['*'], now()->addDays(7))->plainTextToken;
 
             return response()->json([
                 'token'      => $token,
@@ -145,8 +144,7 @@ class AuthController extends Controller
         } catch (\Exception $e) {
             Log::error('Profile error: ' . $e->getMessage());
             return response()->json([
-                'message' => 'Unauthenticated',
-                'error'   => $e->getMessage()
+                'message' => 'Unauthenticated'
             ], 401);
         }
     }
@@ -181,22 +179,27 @@ class AuthController extends Controller
             $client = new \Google_Client(['client_id' => config('services.google.client_id')]);
             $payload = $client->verifyIdToken($request->input('id_token'));
     
-            if ($payload) {
+            if ($payload && ($payload['email_verified'] ?? false) === true) {
                 $googleId = $payload['sub'];
-                $user = User::updateOrCreate(
-                    ['google_id' => $googleId],
-                    [
-                        'name' => $payload['name'],
-                        'email' => $payload['email'],
-                        'email_verified_at' => now(),
-                        'password' => bcrypt(Str::random(16)),
-                    ]
-                );
-    
-                // Tüm eski token'ları temizle
-                $user->tokens()->delete();
-                
-                $token = $user->createToken('google_auth_token')->plainTextToken;
+                $email = strtolower($payload['email']);
+
+                $user = User::where('google_id', $googleId)->first();
+                if (!$user) {
+                    $user = User::whereRaw('LOWER(email) = ?', [$email])->first();
+                    if ($user) {
+                        $user->update(['google_id' => $googleId, 'email_verified_at' => now()]);
+                    } else {
+                        $user = User::create([
+                            'google_id' => $googleId,
+                            'name' => $payload['name'] ?? $email,
+                            'email' => $email,
+                            'email_verified_at' => now(),
+                            'password' => bcrypt(Str::random(32)),
+                        ]);
+                    }
+                }
+
+                $token = $user->createToken('google_auth_token', ['*'], now()->addDays(7))->plainTextToken;
     
                 return response()->json([
                     'user' => new UserResource($user),
@@ -208,7 +211,7 @@ class AuthController extends Controller
             return response()->json(['error' => 'Invalid Google ID token.'], 401);
         } catch (\Throwable $th) {
             Log::error('Google login error: ' . $th->getMessage());
-            return response()->json(['error' => $th->getMessage()], 500);
+            return response()->json(['error' => 'Authentication failed'], 401);
         }
     }
 
