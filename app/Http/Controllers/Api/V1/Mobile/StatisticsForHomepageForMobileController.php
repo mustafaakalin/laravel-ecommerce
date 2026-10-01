@@ -43,7 +43,7 @@ class StatisticsForHomepageForMobileController extends Controller
 
     private function getFeaturedProducts()
     {
-        return Cache::remember('mobile_featured_products', self::CACHE_TTL, function () {
+        return Cache::remember(\App\Support\CacheKeys::mobile('homepage-featured-products'), self::CACHE_TTL, function () {
             return StatisticsForHomepageForProductMobileResource::collection(
                 Product::with(['category', 'images', 'ratings'])
                     ->active()
