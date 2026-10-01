@@ -7,6 +7,9 @@ use App\Models\Category;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductRating;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Http\Request;
 use Typesense\Client;
 
@@ -47,17 +50,43 @@ class ProductController extends Controller
             ->take(10)
             ->get();
 
-        $purchaseHistory = OrderItem::with('order.user')
-            ->where('product_id', $product->id)
+        // Aggregate purchases at SQL level. The previous implementation loaded
+        // every OrderItem and then every related Order/User into PHP memory.
+        $purchaseHistory = User::query()
+            ->select([
+                'users.id',
+                'users.name',
+                'users.avatar',
+                'users.instagram_account',
+                'users.facebook_account',
+                'users.tiktok_account',
+                'users.x_account',
+                'users.linkedin_account',
+                DB::raw('SUM(order_items.quantity) as quantity'),
+            ])
+            ->join('orders', 'orders.user_id', '=', 'users.id')
+            ->join('order_items', 'order_items.order_id', '=', 'orders.id')
+            ->where('order_items.product_id', $product->id)
+            ->groupBy(
+                'users.id',
+                'users.name',
+                'users.avatar',
+                'users.instagram_account',
+                'users.facebook_account',
+                'users.tiktok_account',
+                'users.x_account',
+                'users.linkedin_account'
+            )
             ->get()
-            ->map(function ($item) {
+            ->map(static function ($user) {
                 return (object) [
-                    'user' => $item->order->user,
-                    'quantity' => $item->quantity,
+                    'user' => $user,
+                    'quantity' => (int) $user->quantity,
                 ];
             });
 
-        $product->incrementViewCount();
+        // Avoid a synchronous SQL UPDATE on every product page request.
+        Redis::incr('product:views:' . $product->id);
 
         return view('products.show', compact('product', 'similarProducts', 'brandsimilarProducts', 'purchaseHistory'));
     }
