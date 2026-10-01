@@ -16,7 +16,6 @@ use App\Models\ShipmentDiscount;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\OrderConfirmationMail;
 use Symfony\Component\HttpFoundation\Response;
