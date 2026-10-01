@@ -17,7 +17,7 @@ class CampaignController extends Controller
 
     public function show($slug)
     {
-        $campaign = Campaign::with('products','products.images','products.comments','products.category','products.campaigns')->where('slug', $slug)->firstOrFail();
+        $campaign = Campaign::query()->where('slug', $slug)->firstOrFail();
         return new CampaignResource($campaign);
     }
 }
