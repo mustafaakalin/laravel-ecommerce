@@ -77,8 +77,11 @@ class CheckoutComponent extends Component
         $this->useraddresses = auth()->user()->addresses;
         $this->selectedAddress = $this->useraddresses->where('is_default', true)->first()?->id;
 
-        $this->cart = $user->cart ?? CartModel::create(['user_id' => $user->id]);
-        $this->totalPrice = $this->cart ? $this->cart->calculateTotalPrice() ?? 0 : 0;
+        $this->cart = CartModel::with(['items.product.campaigns', 'items.product.category', 'coupon'])
+            ->where('user_id', $user->id)
+            ->first() ?? CartModel::create(['user_id' => $user->id]);
+
+        $this->totalPrice = $this->cart->calculateTotalPrice();
 
         if ($this->paymentMethod === 'stripe') {
             $this->createStripePaymentIntent();
@@ -88,8 +91,11 @@ class CheckoutComponent extends Component
     #[On('updateCart')]
     public function updateCart()
     {
-        $this->cart = Auth::user()->cart ?? CartModel::create(['user_id' => auth()->id()]);
-        $this->totalPrice = $this->cart ? $this->cart->calculateTotalPrice() ?? 0 : 0;
+        $this->cart = CartModel::with(['items.product.campaigns', 'items.product.category', 'coupon'])
+            ->where('user_id', auth()->id())
+            ->first() ?? CartModel::create(['user_id' => auth()->id()]);
+
+        $this->totalPrice = $this->cart->calculateTotalPrice();
 
         // Fix: Use correct component aliases
         $this->dispatch('cartUpdated')->to(CartCounter::class, CartComponent::class);
@@ -322,13 +328,15 @@ class CheckoutComponent extends Component
 
                 // Apply coupon discount if exists
                 $finalPrice = max(0, $finalPrice - $this->discount);
-                $shipmentPrice = \App\Models\SiteSetting::first()->site_shipment_price;
-                if ($shipmentPrice) {
-                    // Shipment discount
-                    if ($finalPrice >= \App\Models\ShipmentDiscount::first()->price) {
-                        $shipmentPrice = 0;
-                    }
-                    $finalPrice = max(0, $finalPrice + $shipmentPrice);
+                $shipmentPrice = SiteSetting::cached()?->site_shipment_price ?? 0;
+                $shipmentDiscountPrice = cache()->remember(
+                    'shipment-discount:price',
+                    300,
+                    static fn () => ShipmentDiscount::query()->value('price') ?? 0
+                );
+
+                if ($finalPrice < $shipmentDiscountPrice) {
+                    $finalPrice += $shipmentPrice;
                 }
                 // Set the final price to be paid
                 $request->setPaidPrice($finalPrice);
@@ -350,26 +358,29 @@ class CheckoutComponent extends Component
                 $buyer->setSurname(auth()->user()->surname ?? 'Not Set');
                 $buyer->setEmail(auth()->user()->email);
                 $buyer->setIdentityNumber(auth()->user()->identity_number ?? '11111111111');
-                $buyer->setRegistrationAddress($this->useraddresses->find($this->selectedAddress)->address);
-                $buyer->setCity($this->useraddresses->find($this->selectedAddress)->city);
-                $buyer->setCountry($this->useraddresses->find($this->selectedAddress)->country ?? 'Turkey');
+                $address = $this->useraddresses->firstWhere('id', $this->selectedAddress);
+
+                if (! $address) {
+                    throw new \RuntimeException('Selected address not found.');
+                }
+
+                $buyer->setRegistrationAddress($address->address);
+                $buyer->setCity($address->city);
+                $buyer->setCountry($address->country ?? 'Turkey');
                 $request->setBuyer($buyer);
 
-
-                // Shipping address kısmını güncelleyin
-                $shippingAddress = new IyzicoAddress();  // Iyzico'nun Address sınıfını kullanın
+                $shippingAddress = new IyzicoAddress();
                 $shippingAddress->setContactName(auth()->user()->name);
-                $shippingAddress->setCity($this->useraddresses->find($this->selectedAddress)->city);
-                $shippingAddress->setCountry($this->useraddresses->find($this->selectedAddress)->country ?? 'Turkey');
-                $shippingAddress->setAddress($this->useraddresses->find($this->selectedAddress)->address);
+                $shippingAddress->setCity($address->city);
+                $shippingAddress->setCountry($address->country ?? 'Turkey');
+                $shippingAddress->setAddress($address->address);
                 $request->setShippingAddress($shippingAddress);
 
-                // Billing address kısmını güncelleyin
-                $billingAddress = new IyzicoAddress();  // Iyzico'nun Address sınıfını kullanın
+                $billingAddress = new IyzicoAddress();
                 $billingAddress->setContactName(auth()->user()->name);
-                $billingAddress->setCity($this->useraddresses->find($this->selectedAddress)->city);
-                $billingAddress->setCountry($this->useraddresses->find($this->selectedAddress)->country ?? 'Turkey');
-                $billingAddress->setAddress($this->useraddresses->find($this->selectedAddress)->address);
+                $billingAddress->setCity($address->city);
+                $billingAddress->setCountry($address->country ?? 'Turkey');
+                $billingAddress->setAddress($address->address);
                 $request->setBillingAddress($billingAddress);
 
                 // Create basket items with proper pricing
@@ -448,52 +459,61 @@ class CheckoutComponent extends Component
                         $user = Auth::user();
 
 
-                        // Her ürünün Son Fiyat'larının toplamı (ürün ve kampanya indirimleri dahil)
-                        $finalTotal = $this->cart->items->sum(function ($item) {
-                            return $item->getTotalPrice();
-                        });
+                        $finalTotal = $this->cart->items->sum(
+                            static fn ($item) => $item->getTotalPrice()
+                        );
 
-                        // Kargo ücreti kontrolü
-                        $shipmentPrice = SiteSetting::first()->site_shipment_price ?? 0;
-                        $shipmentDiscountPrice = ShipmentDiscount::first()->price ?? 0;
-
-                        // Kupon indirimi (wire:model ile senkronize)
                         if ($this->couponDiscount > 0) {
-                            // Kupon indirimi Nihai Toplamdan büyük olamaz
-                            $couponDiscount = min($this->couponDiscount, $finalTotal);
-                            $finalTotal = max(0, $finalTotal - $couponDiscount);
+                            $finalTotal = max(0, $finalTotal - min($this->couponDiscount, $finalTotal));
                         }
 
-                        // En son kargo ücreti eklenir
+                        $shipmentPrice = SiteSetting::cached()?->site_shipment_price ?? 0;
+                        $shipmentDiscountPrice = cache()->remember(
+                            'shipment-discount:price',
+                            300,
+                            static fn () => ShipmentDiscount::query()->value('price') ?? 0
+                        );
+
                         if ($finalTotal < $shipmentDiscountPrice) {
                             $finalTotal += $shipmentPrice;
                         }
 
+                        $order = Order::create([
+                            'user_id' => $user->id,
+                            'address_id' => $address->id,
+                            'total_price' => round($finalTotal, 2),
+                            'status' => 'paid',
+                            'payment_method' => 'iyzico',
+                            'payment_id' => $payment->getPaymentId(),
+                        ]);
 
-                        $order = new Order();
-                        $order->user_id = $user->id;
-                        $order->address_id = $this->useraddresses->find($this->selectedAddress)->id;
-                        $order->total_price = round($finalTotal, 2);
-                        $order->status = 'paid';
-                        $order->payment_method = 'iyzico';
-                        $order->payment_id = $payment->getPaymentId();
-                        $order->save();
+                        $now = now();
+                        $orderItems = [];
+                        $soldoutItems = [];
 
                         foreach ($this->cart->items as $item) {
-                            $orderItem = new OrderItem();
-                            $orderItem->order_id = $order->id;
-                            $orderItem->product_id = $item->product->id;
-                            $orderItem->quantity = $item->quantity;
-                            $orderItem->price = $item->product->getCurrentPrice();
-                            $orderItem->save();
+                            $orderItems[] = [
+                                'order_id' => $order->id,
+                                'product_id' => $item->product_id,
+                                'quantity' => $item->quantity,
+                                'price' => $item->product->getCurrentPrice(),
+                                'created_at' => $now,
+                                'updated_at' => $now,
+                            ];
 
-                            // Mark product as sold
-                            $soldoutItem = new Soldout();
-                            $soldoutItem->user_id = $user->id;
-                            $soldoutItem->product_id = $item->product->id;
-                            $soldoutItem->order_id = $order->id;
-                            $soldoutItem->is_sold = true;
-                            $soldoutItem->save();
+                            $soldoutItems[] = [
+                                'user_id' => $user->id,
+                                'product_id' => $item->product_id,
+                                'order_id' => $order->id,
+                                'is_sold' => true,
+                                'created_at' => $now,
+                                'updated_at' => $now,
+                            ];
+                        }
+
+                        if ($orderItems) {
+                            OrderItem::insert($orderItems);
+                            Soldout::insert($soldoutItems);
                         }
 
                         // Clear cart
