@@ -36,7 +36,7 @@ class Cart extends Component
 
     public function updateQuantity($itemId, $change)
     {
-        $item = CartItem::find($itemId);
+        $item = CartItem::whereKey($itemId)->whereHas('cart', fn ($query) => $query->where('user_id', auth()->id()))->first();
         
         if (!$item) {
             $this->dispatch('showToast', message: 'Ürün bulunamadı', type: 'error');
@@ -76,7 +76,7 @@ class Cart extends Component
 
     public function removeItem($itemId)
     {
-        CartItem::destroy($itemId);
+        CartItem::whereKey($itemId)->whereHas('cart', fn ($query) => $query->where('user_id', auth()->id()))->delete();
 
 
         $this->dispatch('updateCart');
