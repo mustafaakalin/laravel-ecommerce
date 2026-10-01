@@ -291,6 +291,14 @@ class PaymentForMobileController extends Controller
             $payment = Payment::create($createPaymentRequest, $options);
 
             if ($payment->getStatus() === 'success') {
+            $coupon = $cart->coupon_id ? Coupon::lockForUpdate()->find($cart->coupon_id) : null;
+            if ($coupon) {
+                if (!$coupon->isValid() || CouponUsage::where('coupon_id', $coupon->id)->where('user_id', Auth::id())->exists()) {
+                    throw new \RuntimeException('Coupon is no longer valid.');
+                }
+            }
+
+
                 if ($cart->coupon_id) {
                 $coupon = Coupon::lockForUpdate()->find($cart->coupon_id);
                 if ($coupon) {
@@ -298,6 +306,15 @@ class PaymentForMobileController extends Controller
                         throw new \RuntimeException('Coupon is no longer valid.');
                     }
                 }
+            }
+
+            if ($coupon) {
+                CouponUsage::create([
+                    'coupon_id' => $coupon->id,
+                    'user_id' => Auth::id(),
+                    'order_id' => null,
+                ]);
+                $coupon->increment('used_count');
             }
 
             // Create order with final calculated price
