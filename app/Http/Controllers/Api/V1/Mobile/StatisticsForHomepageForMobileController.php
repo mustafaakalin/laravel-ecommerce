@@ -62,7 +62,9 @@ class StatisticsForHomepageForMobileController extends Controller
     {
         return Cache::remember(\App\Support\CacheKeys::mobile('homepage-new-products'), self::CACHE_TTL, function () {
             return StatisticsForHomepageForProductMobileResource::collection(
-                Product::with(['category', 'media', 'ratings', 'campaigns'])
+                Product::with(['category', 'media', 'campaigns'])
+                    ->withCount('ratings')
+                    ->withAvg('ratings', 'rating')
                     ->active()
                     ->new()
                     ->inStock()
@@ -75,7 +77,7 @@ class StatisticsForHomepageForMobileController extends Controller
 
     private function getCategories()
     {
-        return Cache::remember(\App\Support\CacheKeys::mobile('categories', self::CACHE_TTL, function () {
+        return Cache::remember(\App\Support\CacheKeys::mobile('categories'), self::CACHE_TTL, function () {
             return StatisticsForHomepageCategoryForMobileResource::collection(
                 Category::whereNull('parent_id')
                     ->where('is_active', true)
@@ -90,7 +92,7 @@ class StatisticsForHomepageForMobileController extends Controller
 
     private function getCampaigns()
     {
-        return Cache::remember(\App\Support\CacheKeys::mobile('campaigns', self::CACHE_TTL, function () {
+        return Cache::remember(\App\Support\CacheKeys::mobile('campaigns'), self::CACHE_TTL, function () {
             return Campaign::query()
                 ->where('is_active', true)
                 ->whereDate('end_date', '>=', now())
@@ -112,7 +114,7 @@ class StatisticsForHomepageForMobileController extends Controller
 
     private function getBrands()
     {
-        return Cache::remember(\App\Support\CacheKeys::mobile('brands', self::CACHE_TTL, function () {
+        return Cache::remember(\App\Support\CacheKeys::mobile('brands'), self::CACHE_TTL, function () {
             return Brand::where('is_active', true)
                 ->withCount('products')
                 ->latest()
@@ -132,7 +134,7 @@ class StatisticsForHomepageForMobileController extends Controller
 
     private function getTestimonials()
     {
-        return Cache::remember(\App\Support\CacheKeys::mobile('testimonials', self::CACHE_TTL, function () {
+        return Cache::remember(\App\Support\CacheKeys::mobile('testimonials'), self::CACHE_TTL, function () {
             return Testimonial::where('is_active', true)
                 ->latest()
                 ->get()
@@ -151,28 +153,28 @@ class StatisticsForHomepageForMobileController extends Controller
 
     private function getTotalProductCount()
     {
-        return Cache::remember(\App\Support\CacheKeys::mobile('total-product-count', self::CACHE_TTL, function () {
+        return Cache::remember(\App\Support\CacheKeys::mobile('total-product-count'), self::CACHE_TTL, function () {
             return Product::count() - 1;
         });
     }
 
     private function getTotalCategoryCount()
     {
-        return Cache::remember(\App\Support\CacheKeys::mobile('total-category-count', self::CACHE_TTL, function () {
+        return Cache::remember(\App\Support\CacheKeys::mobile('total-category-count'), self::CACHE_TTL, function () {
             return Category::count() - 1;
         });
     }
 
     private function getTotalBrandCount()
     {
-        return Cache::remember(\App\Support\CacheKeys::mobile('total-brand-count', self::CACHE_TTL, function () {
+        return Cache::remember(\App\Support\CacheKeys::mobile('total-brand-count'), self::CACHE_TTL, function () {
             return Brand::count() - 1;
         });
     }
 
     private function getLatest3Campaign()
     {
-        return Cache::remember(\App\Support\CacheKeys::mobile('latest-3-campaign', self::CACHE_TTL, function () {
+        return Cache::remember(\App\Support\CacheKeys::mobile('latest-3-campaign'), self::CACHE_TTL, function () {
             return Campaign::query()
                 ->select([
                     'id',
