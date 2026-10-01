@@ -11,7 +11,7 @@ class BrandController extends Controller
 {
     public function index()
     {
-        $brands = Brand::with('products','products.images','products.comments','products.category','products.campaigns')->paginate(10);
+        $brands = Brand::with('products','products.tags','products.media','products.comments','products.category','products.campaigns')->paginate(10);
         return BrandResource::collection($brands);
     }
 
