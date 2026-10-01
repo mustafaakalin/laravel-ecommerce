@@ -180,7 +180,7 @@
                 <div class="flex justify-between items-center text-sm text-base-content/70">
                     <span>Kargo (₺):</span>
                     @php
-                        $siteSetting = App\Models\SiteSetting::first();
+                        $siteSetting = App\Models\SiteSetting::cached();
                         $shipmentDiscount = App\Models\ShipmentDiscount::first();
                         $siteShipmentPrice = $siteSetting->site_shipment_price;
                         if($cart->calculateTotalPrice() >= $shipmentDiscount->price){
