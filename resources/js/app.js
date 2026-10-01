@@ -93,3 +93,7 @@ function initProductCardSwipers(root = document) {
 }
 
 document.addEventListener('DOMContentLoaded', () => initProductCardSwipers());
+
+document.addEventListener('livewire:init', () => {
+    window.Livewire.hook('morph.added', ({ el }) => initProductCardSwipers(el));
+});
