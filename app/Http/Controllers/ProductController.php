@@ -61,7 +61,6 @@ class ProductController extends Controller
                 'users.facebook_account',
                 'users.tiktok_account',
                 'users.x_account',
-                'users.linkedin_account',
                 DB::raw('SUM(order_items.quantity) as quantity'),
             ])
             ->join('orders', 'orders.user_id', '=', 'users.id')
@@ -74,8 +73,7 @@ class ProductController extends Controller
                 'users.instagram_account',
                 'users.facebook_account',
                 'users.tiktok_account',
-                'users.x_account',
-                'users.linkedin_account'
+                'users.x_account'
             )
             ->get()
             ->map(static function ($user) {
