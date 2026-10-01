@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\ProductRating;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Http\Request;
 use Typesense\Client;
@@ -128,11 +129,18 @@ class ProductController extends Controller
             ->filter()
             ->values();
 
-        $pagination = view('partials.pagination', ['paginator' => $products])->render();
+        $totalHits = (int) ($result['found'] ?? 0);
+        $paginator = new LengthAwarePaginator(
+            $products,
+            $totalHits,
+            12,
+            (int) $request->input('page', 1),
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
 
         return response()->json([
             'products' => view('partials.product-list', ['products' => $products])->render(),
-            'pagination' => $pagination,
+            'pagination' => view('partials.pagination', ['paginator' => $paginator])->render(),
         ]);
     }
 
