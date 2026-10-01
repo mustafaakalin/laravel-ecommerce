@@ -266,15 +266,10 @@
         <div
             class="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transform translate-x-full group-hover:translate-x-0 transition-all duration-300 z-10">
             @livewire(
-                'toggle-wishlist',
-                [
-                    'product' => $product,
-                    'buttonClasses' => 'btn btn-circle btn-sm bg-base-100/90 hover:bg-base-100 shadow-lg hover:shadow-xl backdrop-blur-sm',
-                ],
-                key('wishlist-' . $product->id)
+                'product-card-actions',
+                ['productId' => $product->id, 'mode' => 'quick'],
+                key('product-card-quick-' . $product->id)
             )
-
-            <livewire:quick-view-button :product-id="$product->id" :button-classes="'btn btn-circle btn-sm bg-base-100/90 hover:bg-base-100 shadow-lg hover:shadow-xl backdrop-blur-sm'" />
         </div>
     </figure>
 
@@ -381,12 +376,9 @@
                 <div
                     class="w-full sm:w-auto md:w-auto lg:w-auto xl:w-auto transform transition-transform duration-300 ease-out group-hover:translate-y-0 translate-y-2">
                     @livewire(
-                        'add-to-cart',
-                        [
-                            'product' => $product,
-                            'buttonClasses' => 'btn btn-primary w-full sm:w-auto md:w-auto lg:w-auto xl:w-auto bg-gradient-to-r from-primary to-primary-focus hover:shadow-lg hover:shadow-primary/30 transition-all duration-500 ease-in-out',
-                        ],
-                        key('add-to-cart-' . $product->id)
+                        'product-card-actions',
+                        ['productId' => $product->id, 'mode' => 'cart'],
+                        key('product-card-cart-' . $product->id)
                     )
                 </div>
             </div>
