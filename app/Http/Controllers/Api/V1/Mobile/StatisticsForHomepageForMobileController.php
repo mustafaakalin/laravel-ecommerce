@@ -58,7 +58,7 @@ class StatisticsForHomepageForMobileController extends Controller
 
     private function getNewProducts()
     {
-        return Cache::remember('mobile_new_products', self::CACHE_TTL, function () {
+        return Cache::remember(\App\Support\CacheKeys::mobile('homepage-new-products'), self::CACHE_TTL, function () {
             return StatisticsForHomepageForProductMobileResource::collection(
                 Product::with(['category', 'media', 'ratings'])
                     ->active()
