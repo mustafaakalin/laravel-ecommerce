@@ -93,20 +93,24 @@ class ProductController extends Controller
     {
         $filters = [];
 
-        if ($categories = $request->input('categories', [])) {
-            $filters[] = 'category_id:=['.implode(',', $categories).']';
+        $categories = array_values(array_filter((array) $request->input('categories', []), fn ($id) => filter_var($id, FILTER_VALIDATE_INT) !== false && (int) $id > 0));
+        if ($categories) {
+            $filters[] = 'category_id:=['.implode(',', array_map('intval', $categories)).']';
         }
 
-        if ($brands = $request->input('brands', [])) {
-            $filters[] = 'brand_id:=['.implode(',', $brands).']';
+        $brands = array_values(array_filter((array) $request->input('brands', []), fn ($id) => filter_var($id, FILTER_VALIDATE_INT) !== false && (int) $id > 0));
+        if ($brands) {
+            $filters[] = 'brand_id:=['.implode(',', array_map('intval', $brands)).']';
         }
 
-        if ($price_min = $request->input('price_min')) {
-            $filters[] = 'price:>='.$price_min;
+        $priceMin = $request->input('price_min');
+        if (is_numeric($priceMin) && (float) $priceMin >= 0) {
+            $filters[] = 'price:>='.number_format((float) $priceMin, 2, '.', '');
         }
 
-        if ($price_max = $request->input('price_max')) {
-            $filters[] = 'price:<='.$price_max;
+        $priceMax = $request->input('price_max');
+        if (is_numeric($priceMax) && (float) $priceMax >= 0) {
+            $filters[] = 'price:<='.number_format((float) $priceMax, 2, '.', '');
         }
 
         if ($request->input('only_active')) {
