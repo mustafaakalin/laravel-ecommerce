@@ -136,7 +136,7 @@ class CheckoutComponent extends Component
             // Log successful intent creation
             Log::info('Stripe payment intent created:', [
                 'amount' => $amount,
-                'currency' => 'usd',
+                'currency' => 'try',
                 'client_secret' => $paymentIntent->client_secret
             ]);
 
