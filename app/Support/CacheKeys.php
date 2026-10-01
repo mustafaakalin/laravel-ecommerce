@@ -21,6 +21,11 @@ final class CacheKeys
         return self::VERSION . ':site-settings';
     }
 
+    public static function shipmentDiscount(): string
+    {
+        return self::VERSION . ':shipment-discount';
+    }
+
     public static function homepage(string $resource): string
     {
         return self::VERSION . ':homepage:' . $resource;
