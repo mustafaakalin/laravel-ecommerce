@@ -12,6 +12,20 @@ permissions:
 jobs:
   security:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: testing
+          POSTGRES_USER: sail
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U sail -d testing"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
     steps:
       - uses: actions/checkout@v4
 
@@ -28,6 +42,19 @@ jobs:
 
       - name: Composer audit
         run: composer audit --locked --no-interaction
+
+      - name: Configure environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          sed -i 's|^APP_ENV=.*|APP_ENV=testing|' .env
+          sed -i 's|^DB_CONNECTION=.*|DB_CONNECTION=pgsql|' .env
+          sed -i 's|^DB_HOST=.*|DB_HOST=127.0.0.1|' .env
+          sed -i 's|^DB_PORT=.*|DB_PORT=5432|' .env
+          sed -i 's|^DB_DATABASE=.*|DB_DATABASE=testing|' .env
+          sed -i 's|^DB_USERNAME=.*|DB_USERNAME=sail|' .env
+          sed -i 's|^DB_PASSWORD=.*|DB_PASSWORD=password|' .env
+          sed -i 's|^SCOUT_DRIVER=.*|SCOUT_DRIVER=database|' .env
 
       - name: PHP syntax check
         run: |
