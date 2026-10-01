@@ -16,6 +16,14 @@ return new class extends Migration
             $table->index(['is_active', 'view_count'], 'products_active_views_idx');
         });
 
+        Schema::table('carts', function (Blueprint $table) {
+            $table->index('user_id', 'carts_user_idx');
+        });
+
+        Schema::table('cart_items', function (Blueprint $table) {
+            $table->index(['cart_id', 'product_id'], 'cart_items_cart_product_idx');
+        });
+
         Schema::table('orders', function (Blueprint $table) {
             $table->index(['user_id', 'created_at'], 'orders_user_created_idx');
             $table->index(['user_id', 'status', 'created_at'], 'orders_user_status_created_idx');
@@ -43,6 +51,14 @@ return new class extends Migration
 
     public function down(): void
     {
+        Schema::table('cart_items', function (Blueprint $table) {
+            $table->dropIndex('cart_items_cart_product_idx');
+        });
+
+        Schema::table('carts', function (Blueprint $table) {
+            $table->dropIndex('carts_user_idx');
+        });
+
         Schema::table('products', function (Blueprint $table) {
             $table->dropIndex('products_active_created_idx');
             $table->dropIndex('products_featured_idx');
