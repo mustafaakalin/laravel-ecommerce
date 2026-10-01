@@ -329,11 +329,7 @@ class CheckoutComponent extends Component
                 // Apply coupon discount if exists
                 $finalPrice = max(0, $finalPrice - $this->discount);
                 $shipmentPrice = SiteSetting::cached()?->site_shipment_price ?? 0;
-                $shipmentDiscountPrice = cache()->remember(
-                    'shipment-discount:price',
-                    300,
-                    static fn () => ShipmentDiscount::query()->value('price') ?? 0
-                );
+                $shipmentDiscountPrice = ShipmentDiscount::cachedPrice();
 
                 if ($finalPrice < $shipmentDiscountPrice) {
                     $finalPrice += $shipmentPrice;
