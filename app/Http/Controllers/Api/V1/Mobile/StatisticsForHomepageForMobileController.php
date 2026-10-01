@@ -45,7 +45,7 @@ class StatisticsForHomepageForMobileController extends Controller
     {
         return Cache::remember(\App\Support\CacheKeys::mobile('homepage-featured-products'), self::CACHE_TTL, function () {
             return StatisticsForHomepageForProductMobileResource::collection(
-                Product::with(['category', 'images', 'ratings'])
+                Product::with(['category', 'images', 'ratings', 'campaigns'])
                     ->active()
                     ->featured()
                     ->inStock()
@@ -60,7 +60,7 @@ class StatisticsForHomepageForMobileController extends Controller
     {
         return Cache::remember(\App\Support\CacheKeys::mobile('homepage-new-products'), self::CACHE_TTL, function () {
             return StatisticsForHomepageForProductMobileResource::collection(
-                Product::with(['category', 'media', 'ratings'])
+                Product::with(['category', 'media', 'ratings', 'campaigns'])
                     ->active()
                     ->new()
                     ->inStock()
