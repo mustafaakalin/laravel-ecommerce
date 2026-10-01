@@ -23,7 +23,7 @@ class Cart extends Component
     public function refreshCart()
     {
         if (auth()->check()) {
-            $this->cart = CartModel::with(['items.product'])->where('user_id', auth()->id())->first();
+            $this->cart = CartModel::with(['items.product.campaigns', 'coupon'])->where('user_id', auth()->id())->first();
         }
     }
 
