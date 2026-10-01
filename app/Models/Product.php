@@ -155,36 +155,6 @@ class Product extends Model implements HasMedia
         $this->increment('view_count');
     }
 
-    // public function activeCampaign()
-    // {
-    //     return $this->campaigns()
-    //         ->where('is_active', true)
-    //         ->where('start_date', '<=', now())
-    //         ->where('end_date', '>=', now())
-    //         ->orderBy('discount_value', 'desc')  // Get the best discount if multiple campaigns exist
-    //         ->first();
-    // }
-
-    // public function activeCampaign2()
-    // {
-    //     return $this->belongsToMany(Campaign::class)
-    //         ->where('is_active', true)
-    //         ->where('start_date', '<=', now())
-    //         ->where('end_date', '>=', now())
-    //         ->orderBy('created_at', 'desc')
-    //         ->limit(1);
-    // }
-
-
-    // public function activeCampaign()
-    // {
-    //     return $this->belongsToMany(Campaign::class)
-    //         ->where('is_active', true)
-    //         ->where('start_date', '<=', now())
-    //         ->where('end_date', '>=', now())
-    //         ->orderBy('created_at', 'desc')
-    //         ->limit(1);
-    // }
     public function activeCampaign()
     {
         if ($this->relationLoaded('campaigns')) {
@@ -224,16 +194,6 @@ class Product extends Model implements HasMedia
 
     public function getCurrentPrice()
     {
-        // $campaign = $this->activeCampaign();
-
-        // if ($campaign) {
-        //     if ($campaign->discount_type === 'percentage') {
-        //         return $this->price * (1 - ($campaign->discount_value / 100));
-        //     } elseif ($campaign->discount_type === 'fixed') {
-        //         return max(0, $this->price - $campaign->discount_value);
-        //     }
-        // }
-
         return $this->discount ?
             $this->price - ($this->price * $this->discount / 100) :
             $this->price;
