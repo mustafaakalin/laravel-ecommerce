@@ -300,11 +300,24 @@ class Product extends Model implements HasMedia
     // for mobile api resource
     public function getFirstMediaUrl($collection = 'default', $conversion = '')
     {
-        if ($this->images->isNotEmpty()) {
-            return $this->images->first()->getFullUrl($collection, $conversion);
+        if ($this->relationLoaded('media')) {
+            $media = $this->media
+                ->where('collection_name', $collection)
+                ->first();
+
+            return $media?->getFullUrl($collection, $conversion)
+                ?? asset('images/default_product_image.jpg');
         }
 
-        return asset('images/default_product_image.jpg');
+        if ($this->relationLoaded('images')) {
+            $image = $this->images->first();
+
+            return $image?->getFullUrl($collection, $conversion)
+                ?? asset('images/default_product_image.jpg');
+        }
+
+        return $this->getFirstMedia($collection)?->getFullUrl($collection, $conversion)
+            ?? asset('images/default_product_image.jpg');
     }
 
     public function averageRating(): float
