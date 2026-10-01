@@ -11,7 +11,7 @@ class CategoryController extends Controller
 {
     public function index()
     {
-        $category = Category::with('products', 'parent', 'children','products.images','products.brand','products.campaigns')->paginate(10);
+        $category = Category::with('products', 'parent', 'children','products.tags','products.media','products.brand','products.campaigns')->paginate(10);
         return CategoryResource::collection($category);
     }
 
