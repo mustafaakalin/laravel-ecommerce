@@ -15,7 +15,7 @@ class ProductController extends Controller
     public function index()
     {
         $products = Product::query()
-            ->with(['category', 'comments.user', 'brand', 'tags', 'campaigns', 'campaigns.products', 'media'])
+            ->with(['category', 'comments', 'brand', 'tags', 'campaigns', 'media'])
             ->withCount(['likes', 'ratings'])
             ->withAvg('ratings', 'rating')
             ->paginate(10);
@@ -28,7 +28,7 @@ class ProductController extends Controller
     public function show($slug)
     {
         $product = Product::query()
-            ->with(['category', 'comments.user', 'brand', 'tags', 'campaigns', 'media'])
+            ->with(['category', 'comments', 'brand', 'tags', 'campaigns', 'media'])
             ->withCount(['likes', 'ratings'])
             ->withAvg('ratings', 'rating')
             ->where('slug', $slug)
