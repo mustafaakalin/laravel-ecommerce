@@ -46,7 +46,7 @@ class CartForMobileController extends Controller
     {
         try {
             // No need for additional permission check since middleware already handles it
-            $cart = Cart::with(['items.product.media'])
+            $cart = Cart::with(['items.product.media', 'items.product.campaigns'])
                 ->where('user_id', Auth::id())
                 ->firstOrCreate(['user_id' => Auth::id()]);
 
@@ -87,11 +87,11 @@ class CartForMobileController extends Controller
             }
 
             // Check campaign validity if exists
-            $activeCampaign = $product->campaigns()
+            $activeCampaign = $product->campaigns
                 ->where('is_active', true)
-                ->where('start_date', '<=', now())
-                ->where('end_date', '>=', now())
-                ->first();
+                ->first(fn ($campaign) =>
+                    $campaign->start_date <= now() && $campaign->end_date >= now()
+                );
 
             if ($activeCampaign) {
                 if (!$activeCampaign->isActive()) {
@@ -119,7 +119,7 @@ class CartForMobileController extends Controller
                 $cart->items()->create($validated);
             }
 
-            return response()->json(new CartForMobileResource($cart->fresh(['items.product.media', 'coupon'])));
+            return response()->json(new CartForMobileResource($cart->fresh(['items.product.media', 'items.product.campaigns', 'coupon'])));
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Could not add item to cart',
@@ -163,7 +163,7 @@ class CartForMobileController extends Controller
     
             $cart->update(['coupon_id' => $coupon->id]);
     
-            return response()->json(new CartForMobileResource($cart->fresh(['items.product.media', 'coupon'])));
+            return response()->json(new CartForMobileResource($cart->fresh(['items.product.media', 'items.product.campaigns', 'coupon'])));
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Could not apply coupon',
@@ -216,11 +216,11 @@ class CartForMobileController extends Controller
 
 
             // Check campaign validity if exists
-            $activeCampaign = $product->campaigns()
+            $activeCampaign = $product->campaigns
                 ->where('is_active', true)
-                ->where('start_date', '<=', now())
-                ->where('end_date', '>=', now())
-                ->first();
+                ->first(fn ($campaign) =>
+                    $campaign->start_date <= now() && $campaign->end_date >= now()
+                );
 
             if ($activeCampaign) {
                 if (!$activeCampaign->isActive()) {
@@ -241,7 +241,7 @@ class CartForMobileController extends Controller
                 ], Response::HTTP_OK);
             }
 
-            return response()->json(new CartForMobileResource($cart->fresh(['items.product.media', 'coupon'])));
+            return response()->json(new CartForMobileResource($cart->fresh(['items.product.media', 'items.product.campaigns', 'coupon'])));
 
         } catch (ModelNotFoundException $e) {
             return response()->json([
@@ -280,7 +280,7 @@ class CartForMobileController extends Controller
                 ], Response::HTTP_OK);
             }
 
-            return response()->json(new CartForMobileResource($cart->fresh(['items.product.media', 'coupon'])));
+            return response()->json(new CartForMobileResource($cart->fresh(['items.product.media', 'items.product.campaigns', 'coupon'])));
 
         } catch (\Exception $e) {
             return response()->json([
