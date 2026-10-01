@@ -309,6 +309,10 @@ class Product extends Model implements HasMedia
 
     public function averageRating(): float
     {
+        if (array_key_exists('ratings_avg_rating', $this->attributes)) {
+            return round((float) ($this->attributes['ratings_avg_rating'] ?? 0), 1);
+        }
+
         $average = $this->relationLoaded('ratings')
             ? $this->ratings->avg('rating')
             : $this->ratings()->avg('rating');
