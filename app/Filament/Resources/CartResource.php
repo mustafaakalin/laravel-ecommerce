@@ -220,7 +220,8 @@ class CartResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
+        $query = parent::getEloquentQuery()
+            ->with(['items.product.campaigns']);
 
         // Admin kullanıcısı için filtreleme yapmıyoruz, tüm kayıtları görebilmeli
         if (!auth()->user()->hasRole('admin')) {
