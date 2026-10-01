@@ -33,8 +33,10 @@ class FeaturedProductsComponentForMobileController extends Controller
                 ->with([
                     'category:id,name,slug',
                     'media',
-                    'ratings', 'campaigns'
+                    'campaigns'
                 ])
+                ->withCount('ratings')
+                ->withAvg('ratings', 'rating')
                 ->where('is_active', true)
                 ->where('is_featured', true)
                 ->where('stock', '>', 0)
