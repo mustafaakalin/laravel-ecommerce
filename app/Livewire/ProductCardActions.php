@@ -13,12 +13,14 @@ class ProductCardActions extends Component
 {
     public int $productId;
     public bool $isLiked = false;
+    public string $mode = 'all';
 
-    public function mount(int $productId): void
+    public function mount(int $productId, string $mode = 'all'): void
     {
         $this->productId = $productId;
+        $this->mode = $mode;
 
-        if (auth()->check()) {
+        if ($mode !== 'cart' && auth()->check()) {
             $this->isLiked = Like::query()
                 ->where('user_id', auth()->id())
                 ->where('product_id', $productId)
