@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Typesense\Client;
 
 class SearchController extends Controller
@@ -29,30 +30,25 @@ class SearchController extends Controller
 
         if ($request->filled('filter_by')) {
             $allowedFields = ['brand_id', 'category_id', 'stock', 'price', 'is_new', 'is_featured'];
-            $parts = preg_split('/\s+&&\s+/', $request->query('filter_by'));
             $safeFilters = [];
 
-            foreach ($parts as $part) {
-                if (!preg_match('/^([a-z_]+):(=|>=|<=|>|<)([A-Za-z0-9_.-]+)$/', trim($part), $m)
-                    || !in_array($m[1], $allowedFields, true)) {
+            foreach (preg_split('/\s+&&\s+/', $request->query('filter_by')) as $part) {
+                if (! preg_match('/^([a-z_]+):(=|>=|<=|>|<)([A-Za-z0-9_.-]+)$/', trim($part), $matches)
+                    || ! in_array($matches[1], $allowedFields, true)) {
                     return response()->json(['message' => 'Invalid filter'], 422);
                 }
 
-                $safeFilters[] = $m[1] . ':' . $m[2] . $m[3];
+                $safeFilters[] = $matches[1] . ':' . $matches[2] . $matches[3];
             }
 
-            if ($safeFilters) {
-                $searchParameters['filter_by'] = implode(' && ', $safeFilters);
-            }
+            $searchParameters['filter_by'] = implode(' && ', $safeFilters);
         }
 
         $searchResults = $client->collections['products']->documents->search($searchParameters);
 
-        // Fetch all matching models in one query (plus eager-loaded relations)
-        // instead of one Product::find() query per Typesense hit.
         $ids = collect($searchResults['hits'])
             ->pluck('document.id')
-            ->map(static fn ($id) => (int) $id)
+            ->map(static fn ($id): int => (int) $id)
             ->values();
 
         $productsById = Product::query()
@@ -61,27 +57,29 @@ class SearchController extends Controller
             ->get()
             ->keyBy('id');
 
-        // Preserve Typesense ranking/order.
         $products = $ids
             ->map(static fn (int $id) => $productsById->get($id))
             ->filter()
             ->values();
 
-        $totalHits = (int) $searchResults['found'];
+        $totalHits = (int) ($searchResults['found'] ?? 0);
+        $paginator = new LengthAwarePaginator(
+            $products,
+            $totalHits,
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
 
         return response()->json([
-            'data' => $products->map(static function (array $product) {
-                return [
-                    'id' => $product->id,
-                    'component' => view('components.product-card', [
-                        'product' => $product,
-                    ])->render(),
-                ];
-            }),
+            'data' => $products->map(static fn (Product $product) => [
+                'id' => $product->id,
+                'component' => view('components.product-card', compact('product'))->render(),
+            ])->values(),
             'pagination' => [
                 'current_page' => $page,
                 'per_page' => $perPage,
-                'total_pages' => (int) ceil($totalHits / $perPage),
+                'total_pages' => $paginator->lastPage(),
                 'total_results' => $totalHits,
             ],
         ]);
