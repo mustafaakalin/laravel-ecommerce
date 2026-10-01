@@ -318,11 +318,12 @@ class PaymentForMobileController extends Controller
         try {
             Stripe::setApiKey(config('services.stripe.secret'));
 
-            $amount = (int) (($totalPrice - $discount) * 100); // Convert to cents and ensure integer
+            $serverTotal = $cart->calculateTotalPrice();
+            $amount = (int) round($serverTotal * 100);
 
             $paymentIntent = PaymentIntent::create([
                 'amount' => $amount,
-                'currency' => 'usd',
+                'currency' => 'try',
                 'automatic_payment_methods' => [
                     'enabled' => true,
                 ],
@@ -332,17 +333,57 @@ class PaymentForMobileController extends Controller
                 ]
             ]);
 
-            // Create order
-            $order = $this->createOrder($cart, $totalPrice, $discount, $request->input('address_id'), 'stripe', $paymentIntent->id);
-
             return [
-                'status' => 'success',
-                'message' => 'Stripe payment intent created',
+                'status' => 'pending',
+                'message' => 'Stripe payment intent created. Confirm the payment before the order is marked paid.',
                 'client_secret' => $paymentIntent->client_secret,
-                'order_id' => $order->id,
+                'payment_intent_id' => $paymentIntent->id,
             ];
         } catch (\Exception $e) {
             throw new \Exception('Stripe payment intent creation failed: ' . $e->getMessage());
+        }
+    }
+
+    public function confirmStripePayment(Request $request)
+    {
+        $data = $request->validate([
+            'payment_intent_id' => ['required', 'string'],
+            'address_id' => ['required', 'integer', 'exists:addresses,id'],
+        ]);
+
+        $address = Auth::user()->addresses()->findOrFail($data['address_id']);
+        Stripe::setApiKey(config('services.stripe.secret'));
+
+        try {
+            $intent = PaymentIntent::retrieve($data['payment_intent_id']);
+            $cart = Cart::where('user_id', Auth::id())->with('items.product')->firstOrFail();
+            $expectedAmount = (int) round($cart->calculateTotalPrice() * 100);
+
+            if ($intent->status !== 'succeeded'
+                || ($intent->metadata['user_id'] ?? null) != (string) Auth::id()
+                || ($intent->metadata['cart_id'] ?? null) != (string) $cart->id
+                || (int) $intent->amount !== $expectedAmount
+                || $intent->currency !== 'try') {
+                return response()->json(['error' => 'Payment verification failed'], 422);
+            }
+
+            $existing = Order::where('payment_id', $intent->id)->first();
+            if ($existing) {
+                return response()->json(['status' => 'success', 'order_id' => $existing->id]);
+            }
+
+            $order = $this->createOrder($cart, $expectedAmount / 100, 0, $address->id, 'stripe', $intent->id);
+
+            return response()->json([
+                'status' => 'success',
+                'order_id' => $order->id,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Stripe payment verification failed', [
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id(),
+            ]);
+            return response()->json(['error' => 'Payment verification failed'], 422);
         }
     }
 
