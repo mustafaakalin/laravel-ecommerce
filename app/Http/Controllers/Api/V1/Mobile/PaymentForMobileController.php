@@ -74,7 +74,7 @@ class PaymentForMobileController extends Controller
 
             return response()->json([
                 'error' => 'Payment failed',
-                'message' => $e->getMessage(),
+                'message' => 'Payment failed. Please try again.',
             ], Response::HTTP_BAD_REQUEST);
         }
     }
