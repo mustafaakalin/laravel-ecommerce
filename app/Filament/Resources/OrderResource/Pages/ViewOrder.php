@@ -21,7 +21,7 @@ class ViewOrder extends ViewRecord
         // Configure PDF options
         $defaultConfig = (new \Dompdf\Dompdf())->getOptions();
         $defaultConfig->set('defaultFont', 'DejaVu Sans');
-        $defaultConfig->set('isRemoteEnabled', true);
+        $defaultConfig->set('isRemoteEnabled', false);
         $defaultConfig->set('isHtml5ParserEnabled', true);
 
         // UTF-8 encoding for customer data
