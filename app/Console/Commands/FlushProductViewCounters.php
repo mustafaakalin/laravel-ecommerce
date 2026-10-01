@@ -24,20 +24,18 @@ class FlushProductViewCounters extends Command
         }
 
         $processingKey = 'product:view:deltas:processing:' . Str::uuid();
+        $redis = Redis::connection();
 
         try {
-            // Rename is atomic: requests arriving during the flush start writing
-            // to a fresh hash and cannot be lost by a read/delete race.
-            $redis = Redis::connection();
             if (! $redis->exists('product:view:deltas')) {
                 return self::SUCCESS;
             }
 
+            // Atomic rename prevents increments during the flush from being lost.
             $redis->rename('product:view:deltas', $processingKey);
             $deltas = $redis->hgetall($processingKey);
 
             if (! $deltas) {
-                $redis->del($processingKey);
                 return self::SUCCESS;
             }
 
@@ -45,38 +43,33 @@ class FlushProductViewCounters extends Command
             $existingIds = Product::query()
                 ->whereIn('id', $ids)
                 ->pluck('id')
+                ->map(static fn ($id) => (int) $id)
                 ->all();
 
-            $existingLookup = array_fill_keys($existingIds, true);
-            $cases = [];
-            $bindings = [];
-            $placeholders = [];
+            if ($existingIds) {
+                $cases = [];
+                $bindings = [];
+                $whereIds = [];
 
-            foreach ($deltas as $id => $delta) {
-                $id = (int) $id;
-                if (! isset($existingLookup[$id])) {
-                    continue;
+                foreach ($existingIds as $id) {
+                    $cases[] = 'WHEN ? THEN ?';
+                    $bindings[] = $id;
+                    $bindings[] = (int) ($deltas[(string) $id] ?? $deltas[$id] ?? 0);
+                    $whereIds[] = $id;
                 }
 
-                $cases[] = 'WHEN ? THEN ?';
-                $bindings[] = $id;
-                $bindings[] = (int) $delta;
-                $placeholders[] = '?';
-            }
-
-            if ($cases) {
                 DB::update(
                     'UPDATE products
                      SET view_count = view_count + CASE id ' . implode(' ', $cases) . ' END
-                     WHERE id IN (' . implode(',', $placeholders) . ')',
-                    [...$bindings, ...array_keys(array_filter($existingLookup, static fn ($value, $id) => in_array((int) $id, $ids, true), ARRAY_FILTER_USE_BOTH))]
+                     WHERE id IN (' . implode(',', array_fill(0, count($whereIds), '?')) . ')',
+                    [...$bindings, ...$whereIds]
                 );
             }
 
-            $redis->del($processingKey);
             return self::SUCCESS;
         } finally {
-            optional($lock)->release();
+            $redis->del($processingKey);
+            $lock->release();
         }
     }
 }
