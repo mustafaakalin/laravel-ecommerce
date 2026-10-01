@@ -28,7 +28,7 @@ class IsNewProductsComponentForMobileResource extends JsonResource
             'discount' => $this->discount,
             'rating' => [
                 'average' => $avgRating,
-                'count' => $this->ratings->count(),
+                'count' => $this->ratings_count ?? 0,
             ],
             'thumbnail' => $this->getFirstMediaUrl('thumbnail'),
             'category' => [
