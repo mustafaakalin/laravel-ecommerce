@@ -11,7 +11,7 @@ class CampaignController extends Controller
 {
     public function index()
     {
-        $campaigns = Campaign::with('products','products.images','products.comments','products.category','products.campaigns')->paginate(10);
+        $campaigns = Campaign::query()->paginate(10);
         return CampaignResource::collection($campaigns);
     }
 
