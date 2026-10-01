@@ -2,76 +2,80 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Cart;
 use App\Models\Brand;
-use App\Models\Order;
-use App\Models\Product;
 use App\Models\Campaign;
-use App\Models\CartItem;
 use App\Models\Category;
-use App\Models\OrderItem;
+use App\Models\Product;
 use App\Models\Testimonial;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Support\CacheKeys;
+use Illuminate\Support\Facades\Cache;
 
 class HomeController extends Controller
 {
     public function index()
     {
-        $products = Product::where('is_active', true)->get();
-        
-        $featuredProducts = Product::with(['category', 'images'])
-            ->active()
-            ->featured()
-            ->inStock()
-            ->latest()
-            ->take(4)
-            ->get();
-            
-        $newProducts = Product::with(['category', 'images'])
-            ->active()
-            ->new()
-            ->inStock()
-            ->latest()
-            ->take(4)
-            ->get();
+        $home = Cache::remember(
+            CacheKeys::homepage('catalog'),
+            60,
+            static function () {
+                return [
+                    // The homepage only needs the count, not every active product row.
+                    'productCount' => Product::query()->where('is_active', true)->count(),
 
-        $campaigns = Campaign::with('products')
-            ->orderBy('start_date', 'desc')
-            ->where('is_active',1)
-            ->latest()
-            ->get();
+                    'featuredProducts' => Product::with(['category', 'images'])
+                        ->active()
+                        ->featured()
+                        ->inStock()
+                        ->latest()
+                        ->take(4)
+                        ->get(),
 
+                    'newProducts' => Product::with(['category', 'images'])
+                        ->active()
+                        ->new()
+                        ->inStock()
+                        ->latest()
+                        ->take(4)
+                        ->get(),
 
-        $categories = Category::whereNull('parent_id')
-            ->where('is_active', true)
-            ->activeProductsCount() // Model'deki scope'u kullan
-            ->latest()
-            ->get();
+                    'campaigns' => Campaign::with('products')
+                        ->where('is_active', true)
+                        ->latest('start_date')
+                        ->get(),
 
+                    'categories' => Category::query()
+                        ->whereNull('parent_id')
+                        ->where('is_active', true)
+                        ->activeProductsCount()
+                        ->latest()
+                        ->get(),
 
-        $brands = Brand::with('products')
-        ->where('is_active', true)
-        ->latest()
-        ->get();
+                    'brands' => Brand::query()
+                        ->with('products')
+                        ->where('is_active', true)
+                        ->latest()
+                        ->get(),
 
+                    'testimonials' => Testimonial::query()
+                        ->where('is_active', true)
+                        ->get(),
+                ];
+            }
+        );
 
-
-        $testimonials = Testimonial::where('is_active', true)->get();
-
-        return view('home', compact(
-            'products',
-            'featuredProducts', 
-            'newProducts', 
-            'categories',
-            'campaigns',
-            'brands',
-            'testimonials'
-        ));
+        return view('home', [
+            'products' => Product::query()
+                ->where('is_active', true)
+                ->select(['id'])
+                ->limit(1)
+                ->get(),
+            'productCount' => $home['productCount'],
+            'featuredProducts' => $home['featuredProducts'],
+            'newProducts' => $home['newProducts'],
+            'categories' => $home['categories'],
+            'campaigns' => $home['campaigns'],
+            'brands' => $home['brands'],
+            'testimonials' => $home['testimonials'],
+        ]);
     }
 }
-
-
-
-
-
