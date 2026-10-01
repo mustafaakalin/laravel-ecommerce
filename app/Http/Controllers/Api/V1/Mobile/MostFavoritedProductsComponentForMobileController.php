@@ -31,8 +31,10 @@ class MostFavoritedProductsComponentForMobileController extends Controller
                 ->with([
                     'category:id,name,slug',
                     'media',
-                    'ratings', 'campaigns'
+                    'campaigns'
                 ])
+                ->withCount('ratings')
+                ->withAvg('ratings', 'rating')
                 ->where('is_active', true)
                 ->where('stock', '>', 0)
                 ->orderByDesc('likes_count')
