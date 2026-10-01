@@ -464,11 +464,7 @@ class CheckoutComponent extends Component
                         }
 
                         $shipmentPrice = SiteSetting::cached()?->site_shipment_price ?? 0;
-                        $shipmentDiscountPrice = cache()->remember(
-                            'shipment-discount:price',
-                            300,
-                            static fn () => ShipmentDiscount::query()->value('price') ?? 0
-                        );
+                        $shipmentDiscountPrice = ShipmentDiscount::cachedPrice();
 
                         if ($finalTotal < $shipmentDiscountPrice) {
                             $finalTotal += $shipmentPrice;
