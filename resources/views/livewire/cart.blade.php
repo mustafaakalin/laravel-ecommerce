@@ -181,7 +181,7 @@
                     <span>Kargo (₺):</span>
                     @php
                         $siteSetting = App\Models\SiteSetting::cached();
-                        $shipmentDiscountPrice = App\Models\ShipmentDiscount::query()->value('price') ?? 0;
+                        $shipmentDiscountPrice = App\Models\ShipmentDiscount::cachedPrice();
                         $siteShipmentPrice = $siteSetting->site_shipment_price;
                         if($cart->calculateTotalPrice() >= $shipmentDiscountPrice){
                             $siteShipmentPrice = 'Ücretsiz';
