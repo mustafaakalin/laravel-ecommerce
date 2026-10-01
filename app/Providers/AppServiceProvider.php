@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Cache;
+use App\Models\SiteSetting;
 use Illuminate\Support\ServiceProvider;
 use App\Http\Controllers\NavbarController;
 use BezhanSalleh\LanguageSwitch\LanguageSwitch;
@@ -17,7 +19,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->scoped('site.settings', static fn () => Cache::flexible(
+            \App\Support\CacheKeys::siteSettings(),
+            [300, 3600],
+            static fn () => SiteSetting::query()->first()
+        ));
     }
 
     /**
