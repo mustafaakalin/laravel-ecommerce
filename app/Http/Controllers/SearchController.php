@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Typesense\Client;
 
@@ -47,18 +48,32 @@ class SearchController extends Controller
 
         $searchResults = $client->collections['products']->documents->search($searchParameters);
 
-        // Search results are rendered from the search document itself.
-        // This removes one SQL query per hit from the hot path.
-        $products = collect($searchResults['hits'])
-            ->map(static fn (array $hit) => $hit['document']);
+        // Fetch all matching models in one query (plus eager-loaded relations)
+        // instead of one Product::find() query per Typesense hit.
+        $ids = collect($searchResults['hits'])
+            ->pluck('document.id')
+            ->map(static fn ($id) => (int) $id)
+            ->values();
+
+        $productsById = Product::query()
+            ->with(['images', 'brand', 'category'])
+            ->whereIn('id', $ids)
+            ->get()
+            ->keyBy('id');
+
+        // Preserve Typesense ranking/order.
+        $products = $ids
+            ->map(static fn (int $id) => $productsById->get($id))
+            ->filter()
+            ->values();
 
         $totalHits = (int) $searchResults['found'];
 
         return response()->json([
             'data' => $products->map(static function (array $product) {
                 return [
-                    'id' => (int) $product['id'],
-                    'component' => view('components.product-card-search', [
+                    'id' => $product->id,
+                    'component' => view('components.product-card', [
                         'product' => $product,
                     ])->render(),
                 ];
