@@ -23,7 +23,7 @@
                     </div>
                     <div class="collapse-content peer-checked:bg-primary/5"> 
                         <div class="py-4 prose">
-                            {!! Str::markdown($faq['answer']) !!}
+                            {!! str(Str::markdown($faq['answer']))->sanitizeHtml() !!}
                         </div>
                     </div>
                 </div>
