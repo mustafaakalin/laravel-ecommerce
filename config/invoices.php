@@ -108,7 +108,7 @@ return [
     ],
 
     'dompdf_options' => [
-        'enable_php' => true,
+        'enable_php' => false,
         /**
          * Do not write log.html or make it optional
          *  @see https://github.com/dompdf/dompdf/issues/2810
@@ -118,7 +118,7 @@ return [
         
         'defaultFont' => 'DejaVu Sans',
         'isHtml5ParserEnabled' => true,
-        'isRemoteEnabled' => true,
+        'isRemoteEnabled' => false,
         'defaultMediaType' => 'screen',
         'isFontSubsettingEnabled' => true,
         'defaultEncoding' => 'UTF-8',
