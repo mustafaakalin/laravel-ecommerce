@@ -247,7 +247,7 @@
                                     fn($item) => $item->getOriginalPrice() * $item->quantity,
                                 );
                                 $shipmentPrice = App\Models\SiteSetting::cached()->site_shipment_price;
-                                $shipmentDiscountprice = App\Models\ShipmentDiscount::first()->price;
+                                $shipmentDiscountprice = App\Models\ShipmentDiscount::query()->value('price') ?? 0;
 
                                 if ($originaltotal > $shipmentDiscountprice) {
                                     $shipmentPrice = 0;
@@ -304,7 +304,7 @@
 
                                 // Kargo ücreti kontrolü
                                 $shipmentPrice = App\Models\SiteSetting::cached()->site_shipment_price ?? 0;
-                                $shipmentDiscountPrice = App\Models\ShipmentDiscount::first()->price ?? 0;
+                                $shipmentDiscountPrice = App\Models\ShipmentDiscount::query()->value('price') ?? 0;
 
                                 // Kupon indirimi (wire:model ile senkronize)
                                 if ($couponDiscount > 0) {
