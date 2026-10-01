@@ -56,6 +56,18 @@ jobs:
           sed -i 's|^DB_PASSWORD=.*|DB_PASSWORD=password|' .env
           sed -i 's|^SCOUT_DRIVER=.*|SCOUT_DRIVER=database|' .env
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Build frontend assets
+        run: npm run build
+
       - name: PHP syntax check
         run: |
           find app config routes database -type f -name '*.php' -print0 | xargs -0 -n1 php -l
