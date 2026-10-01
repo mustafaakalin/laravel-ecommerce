@@ -592,15 +592,42 @@ class CheckoutComponent extends Component
             Stripe::setApiKey(config('services.stripe.secret'));
             $intent = PaymentIntent::retrieve($paymentIntent['id']);
 
-            $serverTotal = $this->cart->calculateTotalPrice();
-            $expectedAmount = (int) round($serverTotal * 100);
+            $cartId = (int) ($intent->metadata['cart_id'] ?? 0);
+            $userId = auth()->id();
 
             if ($intent->status !== 'succeeded'
-                || ($intent->metadata['user_id'] ?? null) != (string) auth()->id()
-                || ($intent->metadata['cart_id'] ?? null) != (string) $this->cart->id
-                || (int) $intent->amount !== $expectedAmount
+                || ($intent->metadata['user_id'] ?? null) != (string) $userId
+                || ! $cartId
+                || (int) $intent->amount <= 0
                 || $intent->currency !== 'try') {
                 throw new \RuntimeException('Stripe payment verification failed');
+            }
+
+            $existingOrder = Order::query()
+                ->where('payment_id', $intent->id)
+                ->first();
+
+            if ($existingOrder) {
+                return $this->redirect(
+                    route('orders.success', ['order' => $existingOrder->id]),
+                    navigate: true
+                );
+            }
+
+            $cart = CartModel::with(['items.product.campaigns'])
+                ->whereKey($cartId)
+                ->where('user_id', $userId)
+                ->firstOrFail();
+
+            if ($cart->items->isEmpty()) {
+                throw new \RuntimeException('Cart is empty');
+            }
+
+            $serverTotal = $cart->calculateTotalPrice();
+            $expectedAmount = (int) round($serverTotal * 100);
+
+            if ((int) $intent->amount !== $expectedAmount) {
+                throw new \RuntimeException('Stripe payment amount mismatch');
             }
 
             $address = auth()->user()->addresses()->findOrFail($this->selectedAddress);
@@ -608,24 +635,28 @@ class CheckoutComponent extends Component
             DB::beginTransaction();
 
             $order = Order::create([
-                'user_id' => auth()->id(),
+                'user_id' => $userId,
                 'address_id' => $address->id,
                 'total_price' => $serverTotal,
                 'status' => 'paid',
                 'payment_id' => $intent->id,
-                'payment_method' => 'stripe'
+                'payment_method' => 'stripe',
             ]);
 
-            foreach ($this->cart->items as $item) {
-                $order->items()->create([
-                    'product_id' => $item->product_id,
-                    'quantity' => $item->quantity,
-                    'price' => $item->product->getCurrentPrice()
-                ]);
-            }
+            $now = now();
+            $orderItems = $cart->items->map(static fn ($item) => [
+                'order_id' => $order->id,
+                'product_id' => $item->product_id,
+                'quantity' => $item->quantity,
+                'price' => $item->product->getCurrentPrice(),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ])->all();
 
-            $this->cart->items()->delete();
-            $this->cart->delete();
+            OrderItem::insert($orderItems);
+
+            $cart->items()->delete();
+            $cart->delete();
 
             DB::commit();
 
