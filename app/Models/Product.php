@@ -187,12 +187,24 @@ class Product extends Model implements HasMedia
     // }
     public function activeCampaign()
     {
+        if ($this->relationLoaded('campaigns')) {
+            $now = now();
+
+            return $this->campaigns
+                ->where('is_active', true)
+                ->filter(fn (Campaign $campaign) =>
+                    $campaign->start_date <= $now && $campaign->end_date >= $now
+                )
+                ->sortByDesc('created_at')
+                ->first();
+        }
+
         return $this->belongsToMany(Campaign::class)
             ->where('is_active', true)
             ->where('start_date', '<=', now())
             ->where('end_date', '>=', now())
-            ->orderBy('created_at', 'desc')
-            ->first(); // Changed to first()
+            ->latest('created_at')
+            ->first();
     }
 
     public function isCampaignProduct()
@@ -335,9 +347,13 @@ class Product extends Model implements HasMedia
         return asset('images/default_product_image.jpg');
     }
 
-    public function averageRating()
+    public function averageRating(): float
     {
-        return round($this->ratings()->avg('rating') ?? 0, 1);
+        $average = $this->relationLoaded('ratings')
+            ? $this->ratings->avg('rating')
+            : $this->ratings()->avg('rating');
+
+        return round($average ?? 0, 1);
     }
 
     public function registerMediaCollections(): void
