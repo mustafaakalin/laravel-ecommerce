@@ -8,52 +8,28 @@ use Livewire\Attributes\On;
 
 class WishlistCounter extends Component
 {
-    public $count = 0;
-    public $showDrawer = false;
+    public int $count = 0;
 
-    
+    #[On('wishlistUpdated')]
+    public function updateCount(): void
+    {
+        $this->count = auth()->check()
+            ? Like::where('user_id', auth()->id())->count()
+            : 0;
+    }
 
-    public function boot()
+    public function mount(): void
     {
         $this->updateCount();
     }
-    
-    #[On('wishlistUpdated')] 
-    public function updateCount()
-    {
-        $this->count = auth()->check() ? Like::where('user_id', auth()->id())->count() : 0;
-    }
 
-    public function showDrawer()
-    {
-        $this->showDrawer = true;
-        $this->dispatch('drawerOpened');
-    }
-
-    public function hideDrawer()
-    {
-        $this->showDrawer = false;
-    }
-
-    public function openDrawer()
+    public function openDrawer(): void
     {
         $this->dispatch('toggleWishlistDrawer');
     }
 
     public function render()
     {
-
-        $wishlistItems = auth()->check() 
-        ? auth()->user()->likes()
-            ->with(['product.images'])
-            ->latest()
-            ->get()
-            ->pluck('product')
-        : collect([]);
-
-        
-        return view('livewire.wishlist-counter',[
-            'wishlistItems' => $wishlistItems
-        ]);
+        return view('livewire.wishlist-counter');
     }
 }
