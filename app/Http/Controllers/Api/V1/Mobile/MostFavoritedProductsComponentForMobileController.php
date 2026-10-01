@@ -15,7 +15,7 @@ class MostFavoritedProductsComponentForMobileController extends Controller
 
     public function index(): AnonymousResourceCollection
     {
-        $products = Cache::remember('mobile_most_favorited_products', self::CACHE_TTL, function () {
+        $products = Cache::remember(\App\Support\CacheKeys::mobile('most-favorited-products'), self::CACHE_TTL, function () {
             return Product::query()
                 ->select([
                     'id',
