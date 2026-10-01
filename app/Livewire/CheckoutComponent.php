@@ -38,7 +38,7 @@ class CheckoutComponent extends Component
     public $cart;
     public $couponCode = '';
     public $couponDiscount = 0;
-    public $couponDiscountType = 'percentage' || 'fixed';
+    public $couponDiscountType = 'percentage';
     public $couponDiscountValue = 0;
     public $discount = 0;
     public $totalPrice;
@@ -110,13 +110,14 @@ class CheckoutComponent extends Component
                 throw new \Exception('Invalid order amount');
             }
 
-            $amount = (int) (($this->totalPrice - $this->discount) * 100); // Convert to cents and ensure integer
+            $serverTotal = $this->cart->calculateTotalPrice();
+            $amount = (int) round($serverTotal * 100); // Convert to cents and ensure integer
 
             Stripe::setApiKey(config('services.stripe.secret'));
 
             $paymentIntent = PaymentIntent::create([
                 'amount' => $amount,
-                'currency' => 'usd',
+                'currency' => 'try',
                 'automatic_payment_methods' => [
                     'enabled' => true,
                 ],
@@ -154,12 +155,13 @@ class CheckoutComponent extends Component
             }
 
             $coupon = Coupon::where('code', $this->couponCode)->first();
-            $this->couponDiscountValue = $coupon->value;
-            $this->couponDiscountType = $coupon->type;
 
             if (!$coupon) {
                 throw new \Exception('Kupon bulunamadı.');
             }
+
+            $this->couponDiscountValue = $coupon->value;
+            $this->couponDiscountType = $coupon->type;
 
             if (!$coupon->isValid()) {
                 throw new \Exception('Bu kupon artık geçerli değil.');
@@ -259,7 +261,7 @@ class CheckoutComponent extends Component
 
                 // Create payment intent only with amount and metadata
                 $paymentIntent = PaymentIntent::create([
-                    'amount' => (int) (($this->totalPrice - $this->discount) * 100),
+                    'amount' => (int) round($this->cart->calculateTotalPrice() * 100),
                     'currency' => 'usd',
                     'automatic_payment_methods' => [
                         'enabled' => true,
@@ -563,14 +565,34 @@ class CheckoutComponent extends Component
     public function handleStripeSuccess($paymentIntent)
     {
         try {
+            if (!is_array($paymentIntent) || empty($paymentIntent['id'])) {
+                throw new \RuntimeException('Invalid payment intent');
+            }
+
+            Stripe::setApiKey(config('services.stripe.secret'));
+            $intent = PaymentIntent::retrieve($paymentIntent['id']);
+
+            $serverTotal = $this->cart->calculateTotalPrice();
+            $expectedAmount = (int) round($serverTotal * 100);
+
+            if ($intent->status !== 'succeeded'
+                || ($intent->metadata['user_id'] ?? null) != (string) auth()->id()
+                || ($intent->metadata['cart_id'] ?? null) != (string) $this->cart->id
+                || (int) $intent->amount !== $expectedAmount
+                || $intent->currency !== 'try') {
+                throw new \RuntimeException('Stripe payment verification failed');
+            }
+
+            $address = auth()->user()->addresses()->findOrFail($this->selectedAddress);
+
             DB::beginTransaction();
 
             $order = Order::create([
                 'user_id' => auth()->id(),
-                'address_id' => $this->selectedAddress,
-                'total_price' => $this->totalPrice - $this->discount,
+                'address_id' => $address->id,
+                'total_price' => $serverTotal,
                 'status' => 'paid',
-                'payment_id' => $paymentIntent['id'],
+                'payment_id' => $intent->id,
                 'payment_method' => 'stripe'
             ]);
 

@@ -83,28 +83,18 @@ class DatabaseSeeder extends Seeder
 
 
 
-        // User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        //     'password' => bcrypt('tEST@123!#Ckuf2mqQUnTm8p1FjXR$y7XS6cR!J*C0xfgV9Z#DR%CMTaG8BVx8J9*NDU^#u*4V'), // Strong password with mix of characters
-        // ])->assignRole('user');
+        $adminPassword = env('ADMIN_PASSWORD');
+        $testPassword = env('TEST_PASSWORD');
 
-        // or
-
-
-        // User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        //     'password' => bcrypt(env('TEST_PASSWORD', 'test@123!#RdZ4VZ0J6*CBYwR7PGuhrWptCB$P*CDYzSr3x!7#CxX^&@^^7CA5!JE6jgwJ96bW')),
-        // ])->assignRole('user');
-
-
+        if (!$adminPassword || !$testPassword) {
+            throw new \RuntimeException('ADMIN_PASSWORD and TEST_PASSWORD must be set before running seeders.');
+        }
 
         // Create test user with proper roles
         $testUser = User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
-            'password' => bcrypt(env('TEST_PASSWORD', 'test@123!#RdZ4VZ0J6*CBYwR7PGuhrWptCB$P*CDYzSr3x!7#CxX^&@^^7CA5!JE6jgwJ96bW'))
+            'password' => bcrypt($testPassword)
         ]);
 
         // Assign both web and api guards role
@@ -114,7 +104,7 @@ class DatabaseSeeder extends Seeder
         $admin = User::factory()->create([
             'name' => 'Admin User',
             'email' => 'admin@example.com',
-            'password' => bcrypt(env('ADMIN_PASSWORD', 'Admin@123!#RdZ4VZ0J6*CBYwR7PGuhrWptCB$P*CDYzSr3x!7#CxX^&@^^7CA5!JE6jgwJ96bW'))
+            'password' => bcrypt($adminPassword)
         ]);
 
         // Assign both web and api guards role

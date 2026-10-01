@@ -22,8 +22,8 @@ class SearchController extends Controller
             'connection_timeout_seconds' => 2,
         ]);
 
-        $page = $request->query('page', 1);
-        $perPage = $request->query('per_page', 24);
+        $page = max(1, min((int) $request->query('page', 1), 10000));
+        $perPage = max(1, min((int) $request->query('per_page', 24), 100));
 
         $searchParameters = [
             'q' => $request->query('query', ''),
@@ -35,8 +35,22 @@ class SearchController extends Controller
             'highlight_full_fields' => 'name,description'
         ];
 
-        if ($request->query('filter_by')) {
-            $searchParameters['filter_by'] = $request->query('filter_by');
+        if ($request->filled('filter_by')) {
+            $allowedFields = ['brand_id', 'category_id', 'stock', 'price', 'is_new', 'is_featured'];
+            $parts = preg_split('/\s+&&\s+/', $request->query('filter_by'));
+            $safeFilters = [];
+
+            foreach ($parts as $part) {
+                if (!preg_match('/^([a-z_]+):(=|>=|<=|>|<)([A-Za-z0-9_.-]+)$/', trim($part), $m)
+                    || !in_array($m[1], $allowedFields, true)) {
+                    return response()->json(['message' => 'Invalid filter'], 422);
+                }
+                $safeFilters[] = $m[1] . ':' . $m[2] . $m[3];
+            }
+
+            if ($safeFilters) {
+                $searchParameters['filter_by'] = implode(' && ', $safeFilters);
+            }
         }
 
         $searchResults = $client->collections['products']

@@ -85,9 +85,9 @@ class Cart extends Model
 
                     // Kupon indirimi
                     if ($this->coupon_id && $this->coupon && $this->coupon->isValid()) {
-                        $couponDiscount = $this->coupon->discount_type === 'fixed'
-                            ? min($this->coupon->discount_value, $finalTotal)
-                            : $finalTotal * ($this->coupon->discount_value / 100);
+                        $couponDiscount = $this->coupon->type === 'fixed'
+                            ? min($this->coupon->value, $finalTotal)
+                            : $finalTotal * ($this->coupon->value / 100);
 
                         $finalTotal = max(0, $finalTotal - $couponDiscount);
                     }

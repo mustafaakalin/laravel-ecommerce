@@ -79,18 +79,18 @@ class ProductFilter extends Component
         ];
 
         // Kategori filtresi
-        if ($this->category) {
-            $query['filter_by'] = "category_id:={$this->category}";
+        if (ctype_digit((string) $this->category) && (int) $this->category > 0) {
+            $query['filter_by'] = 'category_id:=' . (int) $this->category;
         }
 
         // Fiyat filtresi
         if ($this->minPrice !== '' || $this->maxPrice !== '') {
             $priceFilter = [];
-            if ($this->minPrice !== '') {
-                $priceFilter[] = "price:>={$this->minPrice}";
+            if ($this->minPrice !== '' && is_numeric($this->minPrice) && (float) $this->minPrice >= 0) {
+                $priceFilter[] = 'price:>=' . number_format((float) $this->minPrice, 2, '.', '');
             }
-            if ($this->maxPrice !== '') {
-                $priceFilter[] = "price:<={$this->maxPrice}";
+            if ($this->maxPrice !== '' && is_numeric($this->maxPrice) && (float) $this->maxPrice >= 0) {
+                $priceFilter[] = 'price:<=' . number_format((float) $this->maxPrice, 2, '.', '');
             }
             if (!empty($priceFilter)) {
                 $query['filter_by'] = ($query['filter_by'] ?? '') . ' && ' . implode(' && ', $priceFilter);

@@ -92,7 +92,7 @@ class CheckoutController extends Controller
                 'totalinput' => 'nullable'
             ]);
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 400);
+            return response()->json(['error' => 'Invalid checkout request.'], 400);
         }
 
         // Kullanıcının sepetini al
@@ -139,11 +139,7 @@ class CheckoutController extends Controller
         $paymentRequest->setLocale(Locale::TR);
         $paymentRequest->setConversationId(uniqid());
         $paymentRequest->setPrice($totalPrice);
-        if ($request->input('totalinput')) {
-            $paymentRequest->setPaidPrice($request->input('totalinput'));
-        } else {
-            $paymentRequest->setPaidPrice($totalPrice);
-        }
+        $paymentRequest->setPaidPrice($totalPrice);
 
         $paymentRequest->setCurrency('TRY');
         $paymentRequest->setPaymentChannel(PaymentChannel::WEB);

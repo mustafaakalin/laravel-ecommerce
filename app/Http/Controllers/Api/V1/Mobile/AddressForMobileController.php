@@ -163,7 +163,7 @@ class AddressForMobileController extends Controller
                 Address::where('user_id', $user->id)->update(['is_default' => false]);
             }
 
-            $address->update($request->all());
+            $address->update($validator->validated());
 
             DB::commit();
 

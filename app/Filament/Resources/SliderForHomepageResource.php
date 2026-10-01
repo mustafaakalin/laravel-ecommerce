@@ -30,7 +30,12 @@ class SliderForHomepageResource extends Resource
                 Forms\Components\Textarea::make('description')
                     ->columnSpanFull(),
                 Forms\Components\FileUpload::make('image')
-                    ->image(),
+                    ->image()
+                    ->disk('public')
+                    ->directory('sliders')
+                    ->maxSize(5120)
+                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                    ->preserveFilenames(false),
                 Forms\Components\TextInput::make('button_text')
                     ->maxLength(255)
                     ->default(null),

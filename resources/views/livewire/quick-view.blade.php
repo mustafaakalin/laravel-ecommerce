@@ -152,7 +152,7 @@
                                         x-transition:enter-start="opacity-0" 
                                         x-transition:enter-end="opacity-100">
                                         <div class="prose prose-sm break-words sm:prose max-w-none max-h-[200px] overflow-y-auto scrollbar-thin scrollbar-thumb-base-300 scrollbar-track-base-100 p-2">
-                                            {!! $product->description !!}
+                                            {!! str($product->description)->markdown()->sanitizeHtml() !!}
                                         </div>
                                     </div>
 

@@ -36,7 +36,7 @@
     <script>
         const typesenseInstantsearchAdapter = new TypesenseInstantSearchAdapter({
             server: {
-                apiKey: '{{ config('scout.typesense.client-settings.api_key') }}',
+                apiKey: '{{ env('TYPESENSE_SEARCH_ONLY_KEY') }}',
                 nodes: [{
                     host: '{{ config('scout.typesense.client-settings.nodes.0.host') }}',
                     port: '{{ config('scout.typesense.client-settings.nodes.0.port') }}',
@@ -106,7 +106,7 @@
                             <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-200">
                                 <figure class="px-4 pt-4">
                                     <img src="${hit.image || 'https://placehold.co/400x300'}" 
-                                         alt="${hit.name}"
+                                         alt="${escapeHtml(hit.name)}"
                                          class="rounded-xl h-48 w-full object-cover" 
                                          onerror="this.src='https://placehold.co/400x300'"
                                     />
@@ -127,7 +127,7 @@
                                         ${hit.discount ? `<span class="badge badge-accent">%${hit.discount} İndirim</span>` : ''}
                                     </div>
                                     <div class="card-actions justify-end mt-4">
-                                        <a href="/products/${hit.slug}" class="btn btn-primary btn-sm">Detay</a>
+                                        <a href="/products/${encodeURIComponent(hit.slug)}" class="btn btn-primary btn-sm">Detay</a>
                                     </div>
                                 </div>
                             </div>
