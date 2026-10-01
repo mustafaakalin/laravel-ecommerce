@@ -41,9 +41,6 @@ return new class extends Migration
             $table->index('product_id', 'likes_product_idx');
         });
 
-        Schema::table('likes', function (Blueprint $table) {
-            $table->dropIndex('likes_product_idx');
-        });
 
         Schema::table('comments', function (Blueprint $table) {
             $table->index(['product_id', 'created_at'], 'comments_product_created_idx');
@@ -87,6 +84,10 @@ return new class extends Migration
         Schema::table('order_items', function (Blueprint $table) {
             $table->dropIndex('order_items_product_order_idx');
             $table->dropIndex('order_items_order_product_idx');
+        });
+
+        Schema::table('likes', function (Blueprint $table) {
+            $table->dropIndex('likes_product_idx');
         });
 
         Schema::table('comments', function (Blueprint $table) {
