@@ -27,7 +27,7 @@ class MostViewedProductsComponentForMobileController extends Controller
                     'view_count',
                     'is_active'
                 ])
-                ->with(['category:id,name,slug', 'media', 'ratings'])
+                ->with(['category:id,name,slug', 'media', 'ratings', 'campaigns'])
                 ->where('is_active', true)
                 ->where('stock', '>', 0)
                 ->orderBy('view_count', 'desc')
