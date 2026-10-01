@@ -34,7 +34,7 @@ class BestSellingProductsComponentForMobileController extends Controller
 
             return Product::query()
                 ->whereIn('id', $productIds)
-                ->with(['category:id,name,slug', 'media', 'ratings'])
+                ->with(['category:id,name,slug', 'media', 'ratings', 'campaigns'])
                 ->where('is_active', true)
                 ->get()
                 ->map(function ($product) use ($salesMap) {
