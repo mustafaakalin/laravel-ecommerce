@@ -17,7 +17,7 @@ class BrandController extends Controller
 
     public function show($slug)
     {
-        $brand = Brand::with('products','products.images','products.comments','products.category','products.campaigns')->where('slug', $slug)->firstOrFail();
+        $brand = Brand::with('products','products.tags','products.media','products.comments','products.category','products.campaigns')->where('slug', $slug)->firstOrFail();
         return new BrandResource($brand);
     }
 }
