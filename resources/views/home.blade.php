@@ -374,7 +374,7 @@
                         <div class="flex items-center justify-center gap-2">
                             <div class="badge badge-primary gap-2">
                                 <i class="fas fa-box text-xs"></i>
-                                <span>{{ $category->products_count }}</span>
+                                <span>{{ $category->active_products_count }}</span>
                             </div>
                             <span class="text-xs text-base-content/70">Ürün</span>
                         </div>
@@ -487,7 +487,7 @@
                                 </h3>
                                 <div class="flex items-center justify-center gap-2 text-sm">
                                     <span class="badge badge-primary badge-sm">
-                                        {{ $brand->products()->count() }}
+                                        {{ $brand->products_count }}
                                     </span>
                                     <span class="text-base-content/70">Ürün</span>
                                 </div>
@@ -530,7 +530,7 @@
                             <div class="card-body p-4 text-center">
                                 <h3 class="font-semibold">{{ $brand->name }}</h3>
                                 <div class="flex items-center justify-center gap-2 text-sm">
-                                    <span class="badge badge-sm">{{ $brand->products()->count() }}</span>
+                                    <span class="badge badge-sm">{{ $brand->products_count }}</span>
                                     <span class="text-base-content/70">Ürün</span>
                                 </div>
                             </div>
